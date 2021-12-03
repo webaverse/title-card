@@ -12,7 +12,7 @@ export default () => {
   app.name = "title-card";
 
   (async () => {
-    let u2 = `https://sirahi.github.io/title-card-text/`;
+    let u2 = `https://webaverse.github.io/title-card-text/`;
     if (/^https?:/.test(u2)) {
       u2 = "/@proxy/" + u2;
     }
@@ -44,7 +44,7 @@ export default () => {
     // postScene.add(textApp);
   })().then(() => {
     (async () => {
-      let u2 = `https://sirahi.github.io/title-card/eyeblaster.gltj`;
+      let u2 = `https://webaverse.github.io/title-card/eyeblaster.gltj`;
       if (/^https?:/.test(u2)) {
         u2 = "/@proxy/" + u2;
       }
