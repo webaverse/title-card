@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import metaversefile from "metaversefile";
-import { getContentLoaded } from "./universe.js";
-const { useApp, useScene, usePostScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer } = metaversefile;
+const { useApp, useScene, usePostScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, getContentLoaded } = metaversefile;
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
 
@@ -113,7 +112,9 @@ export default () => {
       addedGlobal = true;
     } else if(addedGlobal && getContentLoaded()) {
       addedGlobal = false;
-      // endAnim();
+      setTimeout(()=>{
+        endAnim();
+      }, 2000)
     }
     
     for(let i=0; i<boxes.length; i++) { 
