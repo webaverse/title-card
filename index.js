@@ -1,16 +1,30 @@
+import * as THREE from 'three';
 import metaversefile from "metaversefile";
-const { useApp, usePostScene, getNextInstanceId, useCleanup } = metaversefile;
+import { getContentLoaded } from "./universe.js";
+const { useApp, useScene, usePostScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer } = metaversefile;
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
+
+let _update = null;
 
 let eyeblasterApp = null;
 let textApp = null;
 let subApps = [null, null];
+let boxes = [];
+let shownOnce = [];
+let added = [];
+let zones = null;
+let globalCard = null;
+let globalProps = {};
+let showOnStart = false;
+let globalCardIndex = null;
+
 export default () => {
   const app = useApp();
   const postScene = usePostScene();
+  const scene = useScene();
+  const localPlayer = useLocalPlayer();
   app.name = "title-card";
-
   (async () => {
     let u2 = `https://webaverse.github.io/title-card-text/`;
     if (/^https?:/.test(u2)) {
@@ -22,13 +36,6 @@ export default () => {
     textApp = metaversefile.createApp({
       start_url: u2,
     });
-
-    app.getComponent("heading") &&
-      textApp.setComponent("heading", app.getComponent("heading"));
-    app.getComponent("subHeading") &&
-      textApp.setComponent("subHeading", app.getComponent("subHeading"));
-    app.getComponent("text") &&
-      textApp.setComponent("text", app.getComponent("text"));
 
     textApp.contentId = u2;
     textApp.instanceId = getNextInstanceId();
@@ -66,8 +73,137 @@ export default () => {
       subApps[1] = eyeblasterApp;
 
       // await eyeblasterApp.addModule(m);
-      postScene.add(eyeblasterApp);
+      // postScene.add(eyeblasterApp);
     })();
+  });
+
+  {
+    zones = app.getComponent("zones") || [];
+    globalProps = app.getComponent("globalProps");
+    for (let i=0; i<zones.length; i++) {
+      const zone = zones[i];
+      if(zone.dims) {
+        let box = new THREE.Box3(new THREE.Vector3().fromArray(zone.dims[0]), 
+          new THREE.Vector3().fromArray(zone.dims[1]));
+        boxes.push(box);
+        shownOnce.push(false);
+        added.push(false);
+        
+        const helper = new THREE.Box3Helper( box, 0xff0000 );
+        helper.updateMatrixWorld(true);
+        scene.add( helper );
+      } else {
+        showOnStart = true;
+        globalCardIndex  = i;
+      }
+    }
+  }
+
+  let startTime;
+  let addedGlobal = false;
+  
+  _update = (timestamp, timeDiff) => {
+    if(showOnStart && !addedGlobal && eyeblasterApp && eyeblasterApp.children.length) {
+      startTime = timestamp;
+      globalCard = zones.splice(globalCardIndex, 1)[0];
+      globalCard["animTime"] = 1000;
+      updateProps(globalCard);
+      startAnim();
+      showOnStart = false;
+      addedGlobal = true;
+    } else if(addedGlobal && getContentLoaded()) {
+      addedGlobal = false;
+      // endAnim();
+    }
+    
+    for(let i=0; i<boxes.length; i++) { 
+      let timeFactor = zones[i].timeFactor || globalProps.timeFactor;
+      let animTime = zones[i].animTime || globalProps.animTime;
+      if(boxes[i].containsPoint(localPlayer.position)) {
+        if(!added[i] && !shownOnce[i]) {
+          startTime = timestamp;
+          startAnim(i);
+        }
+        if((((timestamp - startTime)/1000) * timeFactor) % animTime > animTime - 0.1 && added[i]) {
+          endAnim(i);
+        }
+      } else {
+        if((((timestamp - startTime)/1000) * timeFactor) % animTime > animTime - 0.1 && added[i]) {
+          endAnim(i);
+        }
+        shownOnce[i] = false;
+      }
+    }
+  }
+
+  const startAnim = (i) => {
+    if(i !== undefined) {
+      updateProps(zones[i]);
+      added[i] = true;
+      shownOnce[i] = true;
+    }
+    updateStartTime();
+    addApps();
+  }
+
+  const endAnim = (i) => {
+    removeApps();
+    if(i !== undefined)
+      added[i] = false;
+  }
+
+  const updateStartTime = () => {
+    for(let i in textApp.children) {
+      textApp.children[i].material.uniforms.startTime.value = startTime/1000;
+    }
+    eyeblasterApp.children[0].material.uniforms.startTime.value = startTime/1000;
+  }
+
+  const addApps = () => {
+    if(!!textApp && !!eyeblasterApp) {
+      postScene.add(textApp);
+      postScene.add(eyeblasterApp);
+    }
+  }
+
+  const removeApps = () => {
+    if(!!textApp && !!eyeblasterApp) {
+      postScene.remove(textApp);
+      postScene.remove(eyeblasterApp);
+    }
+  }
+
+  const updateProps = (zoneProps) => {
+    const {heading, subHeading, text, textColor, pColorOne, pColorTwo, bgColor, arrowColor, hBgWidth, shBgWidth, timeFactor, animTime} = zoneProps;
+    
+    textApp.children[1].text = heading || globalProps.heading;
+    textApp.children[2].text = subHeading || globalProps.subHeading;
+    textApp.children[3].text = text || globalProps.text;
+
+    for(let i in textApp.children) {
+      textApp.children[i].material.uniforms.color.value = new THREE.Color().setHex(textColor || globalProps.textColor);
+      textApp.children[i].material.uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
+      textApp.children[i].material.uniforms.animTime.value = animTime || globalProps.animTime;
+    }
+
+    let uniforms = eyeblasterApp.children[0].material.uniforms;
+
+    uniforms.pColorOne.value = new THREE.Color().setHex(pColorOne || globalProps.pColorOne);
+    uniforms.pColorTwo.value = new THREE.Color().setHex(pColorTwo || globalProps.pColorTwo);
+    uniforms.arrowColor.value = new THREE.Color().setHex(arrowColor || globalProps.arrowColor);
+    uniforms.hBgWidth.value = hBgWidth || globalProps.hBgWidth;
+    uniforms.shBgWidth.value = shBgWidth || globalProps.shBgWidth;
+    uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
+    uniforms.animTime.value = animTime || globalProps.animTime;
+
+    if(showOnStart) {
+      uniforms.bgColor.value = new THREE.Color().setHex(bgColor || globalProps.bgColor);
+      uniforms.showBg.value = showOnStart;
+    }
+  }
+
+  useFrame(({timestamp, timeDiff}) => {
+    _update && _update(timestamp, timeDiff);
   });
 
   useCleanup(() => {
