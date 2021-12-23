@@ -196,6 +196,7 @@ export default () => {
     uniforms.shBgWidth.value = shBgWidth || globalProps.shBgWidth;
     uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
     uniforms.animTime.value = animTime || globalProps.animTime;
+    uniforms.showBg.value = false;
 
     if(showOnStart) {
       uniforms.bgColor.value = new THREE.Color().setHex(bgColor || globalProps.bgColor);
