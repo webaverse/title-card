@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {preloadFont} from 'troika-three-text'
 import metaversefile from "metaversefile";
 const { useApp, useScene, usePostScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, getContentLoaded } = metaversefile;
 
@@ -6,50 +7,72 @@ const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
 
 let _update = null;
 
+let app = null;
 let eyeblasterApp = null;
 let textApp = null;
 let subApps = [null, null];
+let zones = null;
+let globalCard = null;
+let globalCardIndex = null;
+
 let boxes = [];
 let shownOnce = [];
 let added = [];
-let zones = null;
-let globalCard = null;
 let globalProps = {};
-let showOnStart = false;
-let globalCardIndex = null;
 
-export default () => {
-  const app = useApp();
+let showOnStart = false;
+let appsLoaded = false;
+
+export default e => {
+  app = useApp();
   const postScene = usePostScene();
   const scene = useScene();
   const localPlayer = useLocalPlayer();
   app.name = "title-card";
-  (async () => {
-    let u2 = `https://webaverse.github.io/title-card-text/`;
-    if (/^https?:/.test(u2)) {
-      u2 = "/@proxy/" + u2;
+  
+  e.waitUntil((async () => {
+    {
+      const promise = new Promise(function(resolve, reject) {
+        preloadFont(
+          {
+            font: './fonts/Plaza Regular.ttf',
+            characters: 'abcdefghijklmnopqrstuvwxyz',
+          },
+          () => {
+            resolve();
+          },
+        );
+      })
+
+      await promise;
     }
 
-    const m = await metaversefile.import(u2);
+    {
+      let u2 = `https://webaverse.github.io/title-card-text/`;
+      if (/^https?:/.test(u2)) {
+        u2 = "/@proxy/" + u2;
+      }
 
-    textApp = metaversefile.createApp({
-      start_url: u2,
-    });
+      const m = await metaversefile.import(u2);
 
-    textApp.contentId = u2;
-    textApp.instanceId = getNextInstanceId();
-    textApp.position.copy(app.position);
-    textApp.quaternion.copy(app.quaternion);
-    textApp.scale.copy(app.scale);
-    textApp.updateMatrixWorld();
-    textApp.name = "text";
+      textApp = metaversefile.createApp({
+        start_url: u2,
+      });
 
-    subApps[0] = textApp;
+      textApp.contentId = u2;
+      textApp.instanceId = getNextInstanceId();
+      textApp.position.copy(app.position);
+      textApp.quaternion.copy(app.quaternion);
+      textApp.scale.copy(app.scale);
+      textApp.updateMatrixWorld();
+      textApp.name = "text";
 
-    // await textApp.addModule(m);
-    // postScene.add(textApp);
-  })().then(() => {
-    (async () => {
+      subApps[0] = textApp;
+
+      await app.addModule(m);
+    }
+
+    {
       let u2 = `https://webaverse.github.io/title-card/eyeblaster.gltj`;
       if (/^https?:/.test(u2)) {
         u2 = "/@proxy/" + u2;
@@ -71,12 +94,15 @@ export default () => {
 
       subApps[1] = eyeblasterApp;
 
-      // await eyeblasterApp.addModule(m);
-      // postScene.add(eyeblasterApp);
-    })();
-  });
+      await app.addModule(m);
+    }
+    
+    appsLoaded = true;
+    app.visible = false;
+  })());
 
   {
+    let showBoxHelper = app.getComponent("boxHelper");
     zones = app.getComponent("zones") || [];
     globalProps = app.getComponent("globalProps");
     for (let i=0; i<zones.length; i++) {
@@ -88,9 +114,12 @@ export default () => {
         shownOnce.push(false);
         added.push(false);
         
-        const helper = new THREE.Box3Helper( box, 0xff0000 );
-        helper.updateMatrixWorld(true);
-        scene.add( helper );
+        if(showBoxHelper) {
+          const helper = new THREE.Box3Helper( box, 0x00ff00 );
+          helper.updateMatrixWorld(true);
+          scene.add( helper );
+        }
+
       } else {
         showOnStart = true;
         globalCardIndex  = i;
@@ -102,15 +131,16 @@ export default () => {
   let addedGlobal = false;
   
   _update = (timestamp, timeDiff) => {
-    if(showOnStart && !addedGlobal && eyeblasterApp && eyeblasterApp.children.length) {
+    if(showOnStart && !addedGlobal && appsLoaded) {
       startTime = timestamp;
       globalCard = zones.splice(globalCardIndex, 1)[0];
-      globalCard["animTime"] = 1000;
+      globalCard["animTime"] = 10000;
       updateProps(globalCard);
       startAnim();
       showOnStart = false;
       addedGlobal = true;
-    } else if(addedGlobal && getContentLoaded()) {
+    }
+    if(addedGlobal && getContentLoaded()) {
       addedGlobal = false;
       setTimeout(()=>{
         endAnim();
@@ -144,50 +174,47 @@ export default () => {
       shownOnce[i] = true;
     }
     updateStartTime();
-    addApps();
+    app.visible = true;
   }
 
   const endAnim = (i) => {
-    removeApps();
+    app.visible = false;
     if(i !== undefined)
       added[i] = false;
   }
 
   const updateStartTime = () => {
-    for(let i in textApp.children) {
-      textApp.children[i].material.uniforms.startTime.value = startTime/1000;
-    }
-    eyeblasterApp.children[0].material.uniforms.startTime.value = startTime/1000;
-  }
-
-  const addApps = () => {
-    if(!!textApp && !!eyeblasterApp) {
-      postScene.add(textApp);
-      postScene.add(eyeblasterApp);
+    for(let i in app.children) {
+      app.children[i].material.uniforms.startTime.value = startTime/1000;
     }
   }
 
-  const removeApps = () => {
+  const addApp = () => {
     if(!!textApp && !!eyeblasterApp) {
-      postScene.remove(textApp);
-      postScene.remove(eyeblasterApp);
+      postScene.add(app);
+    }
+  }
+
+  const removeApp = () => {
+    if(!!textApp && !!eyeblasterApp) {
+      postScene.remove(app);
     }
   }
 
   const updateProps = (zoneProps) => {
     const {heading, subHeading, text, textColor, pColorOne, pColorTwo, bgColor, arrowColor, hBgWidth, shBgWidth, timeFactor, animTime} = zoneProps;
     
-    textApp.children[1].text = heading || globalProps.heading;
-    textApp.children[2].text = subHeading || globalProps.subHeading;
-    textApp.children[3].text = text || globalProps.text;
+    app.children[1].text = heading || globalProps.heading;
+    app.children[2].text = subHeading || globalProps.subHeading;
+    app.children[3].text = text || globalProps.text;
 
-    for(let i in textApp.children) {
-      textApp.children[i].material.uniforms.color.value = new THREE.Color().setHex(textColor || globalProps.textColor);
-      textApp.children[i].material.uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
-      textApp.children[i].material.uniforms.animTime.value = animTime || globalProps.animTime;
+    for(let i=0; i< app.children.length - 1; i++) {
+      app.children[i].material.uniforms.color.value = new THREE.Color().setHex(textColor || globalProps.textColor);
+      app.children[i].material.uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
+      app.children[i].material.uniforms.animTime.value = animTime || globalProps.animTime;
     }
 
-    let uniforms = eyeblasterApp.children[0].material.uniforms;
+    let uniforms = app.children[app.children.length - 1].material.uniforms;
 
     uniforms.pColorOne.value = new THREE.Color().setHex(pColorOne || globalProps.pColorOne);
     uniforms.pColorTwo.value = new THREE.Color().setHex(pColorTwo || globalProps.pColorTwo);
