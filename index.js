@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {preloadFont} from 'troika-three-text'
 import metaversefile from "metaversefile";
-const { useApp, useScene, usePostScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, getContentLoaded } = metaversefile;
+const { useApp, useScene, usePostScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, isSceneLoaded } = metaversefile;
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
 
@@ -140,7 +140,7 @@ export default e => {
       showOnStart = false;
       addedGlobal = true;
     }
-    if(addedGlobal && getContentLoaded()) {
+    if(addedGlobal && isSceneLoaded()) {
       addedGlobal = false;
       setTimeout(()=>{
         endAnim();
