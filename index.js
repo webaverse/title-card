@@ -132,13 +132,13 @@ export default e => {
   
   _update = (timestamp, timeDiff) => {
     if(showOnStart && !addedGlobal && appsLoaded) {
-      showOnStart = false;
-      addedGlobal = true;
       startTime = timestamp;
       globalCard = zones.splice(globalCardIndex, 1)[0];
       globalCard["animTime"] = 10000;
       updateProps(globalCard);
       startAnim();
+      showOnStart = false;
+      addedGlobal = true;
     }
     if(addedGlobal && isSceneLoaded()) {
       addedGlobal = false;
