@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {preloadFont} from 'troika-three-text'
 import metaversefile from "metaversefile";
-const { useApp, useScene, useOrthographicScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, isSceneLoaded } = metaversefile;
+const { useApp, useScene, usePostOrthographicScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, isSceneLoaded } = metaversefile;
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
 
@@ -25,7 +25,7 @@ let appsLoaded = false;
 
 export default e => {
   app = useApp();
-  const sceneOrthographic = useOrthographicScene();
+  const postSceneOrthographic = usePostOrthographicScene();
   const scene = useScene();
   const localPlayer = useLocalPlayer();
   app.name = "title-card";
@@ -191,13 +191,13 @@ export default e => {
 
   const addApp = () => {
     if(!!textApp && !!eyeblasterApp) {
-      sceneOrthographic.add(app);
+      postSceneOrthographic.add(app);
     }
   }
 
   const removeApp = () => {
     if(!!textApp && !!eyeblasterApp) {
-      sceneOrthographic.remove(app);
+      postSceneOrthographic.remove(app);
     }
   }
 
@@ -238,7 +238,7 @@ export default e => {
   useCleanup(() => {
     for (const subApp of subApps) {
       if (subApp) {
-        sceneOrthographic.remove(subApp);
+        postSceneOrthographic.remove(subApp);
         subApp.destroy();
       }
     }
