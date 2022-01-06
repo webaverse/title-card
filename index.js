@@ -148,7 +148,7 @@ export default e => {
       reverseAnim();
       setTimeout(()=>{
         endAnim();
-      }, (globalCard.animationTime/2.0) * 1000.0);
+      }, ((globalCard.animationTime ?? 6.0)/2.0) * 1000.0);
     }
     
     for(let i=0; i<boxes.length; i++) {
