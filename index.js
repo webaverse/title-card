@@ -13,15 +13,15 @@ let textApp = null;
 let subApps = [null, null];
 let zones = null;
 let globalCard = null;
-let globalCardIndex = null;
+let globalCardIndex = -1;
 let globalProps = null;
 
 let boxes = [];
 let boxHelpers = [];
 let shownOnce = [];
+let hasBg = [];
 let added = [];
 
-let showOnStart = false;
 let appsLoaded = false;
 
 export default e => {
@@ -29,7 +29,7 @@ export default e => {
   const postSceneOrthographic = usePostOrthographicScene();
   const scene = useScene();
   const localPlayer = useLocalPlayer();
-  app.name = "title-card";
+  app.name = 'title-card';
 
   const showBoxHelper = app.getComponent('boxHelper');
   
@@ -104,27 +104,26 @@ export default e => {
   })());
 
   {
-    zones = app.getComponent("zones") || [];
-    globalProps = app.getComponent("globalProps") || {};
+    zones = app.getComponent('zones') || [];
+    globalProps = app.getComponent('globalProps') || {};
     for (let i=0; i<zones.length; i++) {
       const zone = zones[i];
-      if(zone.dimensions) {
+      if (zone.dimensions) { // normal zone
         let box = new THREE.Box3(new THREE.Vector3().fromArray(zone.dimensions[0]), 
           new THREE.Vector3().fromArray(zone.dimensions[1]));
         boxes.push(box);
         shownOnce.push(false);
+        hasBg.push(false);
         added.push(false);
         boxHelpers.push(null);
 
-        if(showBoxHelper) {
+        if (showBoxHelper) {
           const boxHelper = new THREE.Box3Helper( box, 0x00ff00 );
           boxHelper.updateMatrixWorld(true);
           scene.add(boxHelper);
           boxHelpers[i] = boxHelper;
         }
-
-      } else {
-        showOnStart = true;
+      } else { // global zone
         globalCardIndex  = i;
       }
     }
@@ -135,15 +134,14 @@ export default e => {
   let reverse = false;
   
   _update = (timestamp, timeDiff) => {
-    if(showOnStart && !addedGlobal && appsLoaded) {
+    if (showOnStart && !addedGlobal && appsLoaded) {
       startTime = timestamp;
       globalCard = zones.splice(globalCardIndex, 1)[0];
       updateProps(globalCard);
       startAnim();
       showOnStart = false;
       addedGlobal = true;
-    }
-    else if(addedGlobal && isSceneLoaded()) {
+    } else if (addedGlobal && isSceneLoaded()) {
       addedGlobal = false;
       startTime = timestamp;
       reverseAnim();
@@ -188,7 +186,7 @@ export default e => {
   }
 
   const startAnim = (i) => {
-    if(i !== undefined) {
+    if (i !== undefined) {
       updateProps(zones[i]);
       added[i] = true;
       shownOnce[i] = true;
@@ -199,8 +197,9 @@ export default e => {
 
   const endAnim = (i) => {
     app.visible = false;
-    if(i !== undefined)
+    if (i !== undefined) {
       added[i] = false;
+    }
   }
 
   const reverseAnim = () => {
