@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {preloadFont} from 'troika-three-text'
-import metaversefile from "metaversefile";
+// import {preloadFont} from 'troika-three-text'
+import metaversefile from 'metaversefile';
 const { useApp, useScene, usePostOrthographicScene, getNextInstanceId, useCleanup, useFrame, useLocalPlayer, isSceneLoaded } = metaversefile;
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
@@ -31,7 +31,7 @@ export default e => {
   const localPlayer = useLocalPlayer();
   app.name = "title-card";
 
-  let showBoxHelper = app.getComponent("boxHelper");
+  const showBoxHelper = app.getComponent('boxHelper');
   
   e.waitUntil((async () => {
     /* {
