@@ -11,7 +11,7 @@ let app = null;
 let eyeblasterApp = null;
 let textApp = null;
 let subApps = [null, null];
-let zones = null;
+/* let zones = null;
 let globalCard = null;
 let globalCardIndex = -1;
 let globalProps = null;
@@ -22,7 +22,37 @@ let shownOnce = [];
 let hasBg = [];
 let added = [];
 
-let appsLoaded = false;
+let appsLoaded = false; */
+
+class Zone {
+  constructor({
+    boundingBox,
+    heading,
+    subHeading,
+    text,
+    textColor,
+    primaryColor1,
+    primaryColor2,
+    primaryColor3,
+    arrowColor,
+    headingBgWidth,
+    subHeadingBgWidth,
+    animationTime,
+  }) {
+    this.boundingBox = boundingBox;
+    this.heading = heading;
+    this.subHeading = subHeading;
+    this.text = text;
+    this.textColor = textColor;
+    this.primaryColor1 = primaryColor1;
+    this.primaryColor2 = primaryColor2;
+    this.primaryColor3 = primaryColor3;
+    this.arrowColor = arrowColor;
+    this.headingBgWidth = headingBgWidth;
+    this.subHeadingBgWidth = subHeadingBgWidth;
+    this.animationTime = animationTime;
+  }
+}
 
 export default e => {
   app = useApp();
@@ -50,6 +80,7 @@ export default e => {
       await promise;
     } */
 
+    let appsLoaded = false;
     const promises = [];
     promises.push((async () => {
       let u2 = `../title-card/eyeblaster.gltj`;
@@ -96,43 +127,62 @@ export default e => {
       await textApp.addModule(m);
     })());
     await Promise.all(promises);
+    
     app.add(eyeblasterApp);
     app.add(textApp);
     
     appsLoaded = true;
-    app.visible = false;
+    // app.visible = false;
   })());
 
-  {
-    zones = app.getComponent('zones') || [];
-    globalProps = app.getComponent('globalProps') || {};
-    for (let i=0; i<zones.length; i++) {
-      const zone = zones[i];
-      if (zone.dimensions) { // normal zone
-        let box = new THREE.Box3(new THREE.Vector3().fromArray(zone.dimensions[0]), 
-          new THREE.Vector3().fromArray(zone.dimensions[1]));
-        boxes.push(box);
-        shownOnce.push(false);
-        hasBg.push(false);
-        added.push(false);
-        boxHelpers.push(null);
-
-        if (showBoxHelper) {
-          const boxHelper = new THREE.Box3Helper( box, 0x00ff00 );
-          boxHelper.updateMatrixWorld(true);
-          scene.add(boxHelper);
-          boxHelpers[i] = boxHelper;
-        }
-      } else { // global zone
-        globalCardIndex  = i;
-      }
-    }
-  }
-
-  let startTime = 0.0;
-  let addedGlobal = false;
-  let reverse = false;
+  const boxHelpers = [];
+  const zones = (app.getComponent('zones') ?? []).map(zoneSpec => {
+    const {
+      heading,
+      subHeading,
+      text,
+      textColor,
+      primaryColor1,
+      primaryColor2,
+      primaryColor3,
+      arrowColor,
+      headingBgWidth,
+      subHeadingBgWidth,
+      animationTime,
+      dimensions,
+    } = zoneSpec;
+    
+    const boundingBox = dimensions ? new THREE.Box3(
+      new THREE.Vector3().fromArray(dimensions[0]), 
+      new THREE.Vector3().fromArray(dimensions[1])
+    ) : new THREE.Box3(
+      new THREE.Vector3(-Infinity, -Infinity, -Infinity), 
+      new THREE.Vector3(Infinity, Infinity, Infinity)
+    );
+    const zone = new Zone({
+      boundingBox,
+      heading,
+      subHeading,
+      text,
+      textColor,
+      primaryColor1,
+      primaryColor2,
+      primaryColor3,
+      arrowColor,
+      headingBgWidth,
+      subHeadingBgWidth,
+      animationTime,
+    });
+    if (showBoxHelper) {
+      const boxHelper = new THREE.Box3Helper(boundingBox, 0x00ff00);
+      boxHelper.updateMatrixWorld(true);
+      scene.add(boxHelper);
+      boxHelpers.push(boxHelper);
+    }      
+    return zone;
+  });
   
+  let lastZone = null;
   _update = (timestamp, timeDiff) => {
     if (showOnStart && !addedGlobal && appsLoaded) {
       startTime = timestamp;
@@ -283,11 +333,9 @@ export default e => {
         subApp.destroy();
       }
     }
-    if(showBoxHelper) {
-      for(const boxHelper of boxHelpers) {
-        if (boxHelper) {
-          scene.remove(boxHelper);
-        }
+    for (const boxHelper of boxHelpers) {
+      if (boxHelper) {
+        scene.remove(boxHelper);
       }
     }
   });
