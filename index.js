@@ -76,6 +76,12 @@ export default e => {
       textApp.children[2].text = subHeading;
       textApp.children[3].text = text;
 
+      const hBlockBounds = textApp.children[1].textRenderInfo.blockBounds;
+      const hBgWidth = hBlockBounds[2] - hBlockBounds[0];
+
+      const shBlockBounds = textApp.children[2].textRenderInfo.blockBounds;
+      const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
+
       for (const child of textApp.children) {
         let uniforms = child.material.uniforms;
         
@@ -103,14 +109,11 @@ export default e => {
       uniforms.pColor2.value.setHex(_parseColor(primaryColor2));
       uniforms.pColor3.value.setHex(_parseColor(primaryColor3));
       uniforms.arrowColor.value.setHex(_parseColor(arrowColor));
-      uniforms.hBgWidth.value = headingBgWidth;
-      uniforms.shBgWidth.value = subHeadingBgWidth;
+      uniforms.hBgWidth.value = hBgWidth;
+      uniforms.shBgWidth.value = shBgWidth;
       uniforms.animTime.value = animationTime;
       uniforms.startValue.value = 0.0;
       uniforms.endValue.value = 6.0;
-      uniforms.hBgWidthOffset.value = 0.0;
-      uniforms.shBgWidthOffset.value = 0.0;
-window.uniforms = uniforms;
 
       if (showBg) {
         if (Array.isArray(uniforms.bgColor.value)) {

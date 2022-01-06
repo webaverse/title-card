@@ -60,14 +60,6 @@
       value: 0.0,
       needsUpdate: true,
     },
-    hBgWidthOffset: {
-      value: 0.0,
-      needsUpdate: true,
-    },
-    shBgWidthOffset: {
-      value: 0.0,
-      needsUpdate: true,
-    },
   },
   vertexShader: `\
     precision highp float;
@@ -100,8 +92,6 @@
     uniform float startValue;
     uniform float endValue;
     uniform bool showBg;
-    uniform float hBgWidthOffset;
-    uniform float shBgWidthOffset;
 
     varying vec2 vUv;
     
