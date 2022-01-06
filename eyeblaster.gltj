@@ -64,10 +64,6 @@
       value: 0.0,
       needsUpdate: true,
     },
-    alphaFlip: {
-      value: 0.0,
-      needsUpdate: true,
-    },
   },
   vertexShader: `\
     precision highp float;
@@ -101,7 +97,6 @@
     uniform bool showBg;
     uniform float hBgWidthOffset;
     uniform float shBgWidthOffset;
-    uniform float alphaFlip;
 
     varying vec2 vUv;
     
@@ -281,26 +276,6 @@
             color.a = 1.;
           }
         }
-        //// heading trail
-        {
-          float offSet = min(1.99, v);
-          if(offSet == 1.99)
-            offSet = 0.0;
-          vec2 bottomLeft = vec2((1. + hBgWidth - hBgWidthOffset) + 0.99 - offSet, 0.1);
-          vec2 topRight = vec2((1. + hBgWidth*2. - hBgWidthOffset) + 0.99 - offSet, 0.175);
-          if (
-            insideAABB(vUv, bottomLeft, topRight)
-          ) {
-            float alpha = abs(alphaFlip - (((topRight.x - vUv.x) * 0.5) + 0.5));
-            if(showBg) {
-              color.rgb = pColorOne * alpha + bgColor * (1.0 - alpha);
-              color.a = 1.0;
-            } else {
-              color.rgb = pColorOne;
-              color.a = alpha;
-            }
-          }
-        }
       }
 
       {
@@ -314,26 +289,6 @@
           ) {
             color.rgb = pColorOne;
             color.a = 1.;
-          }
-        }
-        //// sub-heading trail
-        {
-          float offSet = min(2.99, v);
-          if(offSet == 2.99)
-            offSet = 0.0;
-          vec2 bottomLeft = vec2((1. + shBgWidth - shBgWidthOffset) + 1.99 - offSet, 0.025);
-          vec2 topRight = vec2((1. + shBgWidth*2. - shBgWidthOffset) + 1.99 - offSet, 0.075);
-          if (
-            insideAABB(vUv, bottomLeft, topRight)
-          ) {
-            float alpha = abs(alphaFlip - (((topRight.x - vUv.x) * 0.5) + 0.5));
-            if(showBg) {
-              color.rgb = pColorOne * alpha + bgColor * (1.0 - alpha);
-              color.a = 1.0;
-            } else {
-              color.rgb = pColorOne;
-              color.a = alpha;
-            }
           }
         }
       }
