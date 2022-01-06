@@ -74,7 +74,7 @@ export default e => {
       await eyeblasterApp.addModule(m);
     })());
     promises.push((async () => {
-      let u2 = `../title-card-text/`;
+      let u2 = `https://webaverse.github.io/title-card-text/`;
       if (/^https?:/.test(u2)) {
         u2 = "/@proxy/" + u2;
       }
