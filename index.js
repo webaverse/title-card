@@ -14,11 +14,12 @@ let subApps = [null, null];
 let zones = null;
 let globalCard = null;
 let globalCardIndex = null;
+let globalProps = null;
 
 let boxes = [];
+let boxHelpers = [];
 let shownOnce = [];
 let added = [];
-let globalProps = {};
 
 let showOnStart = false;
 let appsLoaded = false;
@@ -29,6 +30,8 @@ export default e => {
   const scene = useScene();
   const localPlayer = useLocalPlayer();
   app.name = "title-card";
+
+  let showBoxHelper = app.getComponent("boxHelper");
   
   e.waitUntil((async () => {
     {
@@ -36,7 +39,7 @@ export default e => {
         preloadFont(
           {
             font: './fonts/Plaza Regular.ttf',
-            characters: 'abcdefghijklmnopqrstuvwxyz',
+            characters: [],
           },
           () => {
             resolve();
@@ -55,9 +58,7 @@ export default e => {
 
       const m = await metaversefile.import(u2);
 
-      textApp = metaversefile.createApp({
-        start_url: u2,
-      });
+      textApp = metaversefile.createApp();
 
       textApp.contentId = u2;
       textApp.instanceId = getNextInstanceId();
@@ -69,7 +70,8 @@ export default e => {
 
       subApps[0] = textApp;
 
-      await app.addModule(m);
+      await textApp.addModule(m);
+      app.add(textApp);
     }
 
     {
@@ -80,9 +82,7 @@ export default e => {
 
       const m = await metaversefile.import(u2);
 
-      eyeblasterApp = metaversefile.createApp({
-        start_url: u2,
-      });
+      eyeblasterApp = metaversefile.createApp();
 
       eyeblasterApp.contentId = u2;
       eyeblasterApp.instanceId = getNextInstanceId();
@@ -94,7 +94,8 @@ export default e => {
 
       subApps[1] = eyeblasterApp;
 
-      await app.addModule(m);
+      await eyeblasterApp.addModule(m);
+      app.add(eyeblasterApp);
     }
     
     appsLoaded = true;
@@ -102,22 +103,23 @@ export default e => {
   })());
 
   {
-    let showBoxHelper = app.getComponent("boxHelper");
     zones = app.getComponent("zones") || [];
-    globalProps = app.getComponent("globalProps");
+    globalProps = app.getComponent("globalProps") || {};
     for (let i=0; i<zones.length; i++) {
       const zone = zones[i];
-      if(zone.dims) {
-        let box = new THREE.Box3(new THREE.Vector3().fromArray(zone.dims[0]), 
-          new THREE.Vector3().fromArray(zone.dims[1]));
+      if(zone.dimensions) {
+        let box = new THREE.Box3(new THREE.Vector3().fromArray(zone.dimensions[0]), 
+          new THREE.Vector3().fromArray(zone.dimensions[1]));
         boxes.push(box);
         shownOnce.push(false);
         added.push(false);
-        
+        boxHelpers.push(null);
+
         if(showBoxHelper) {
-          const helper = new THREE.Box3Helper( box, 0x00ff00 );
-          helper.updateMatrixWorld(true);
-          scene.add( helper );
+          const boxHelper = new THREE.Box3Helper( box, 0x00ff00 );
+          boxHelper.updateMatrixWorld(true);
+          scene.add(boxHelper);
+          boxHelpers[i] = boxHelper;
         }
 
       } else {
@@ -127,40 +129,57 @@ export default e => {
     }
   }
 
-  let startTime;
+  let startTime = 0.0;
   let addedGlobal = false;
+  let reverse = false;
   
   _update = (timestamp, timeDiff) => {
     if(showOnStart && !addedGlobal && appsLoaded) {
       startTime = timestamp;
       globalCard = zones.splice(globalCardIndex, 1)[0];
-      globalCard["animTime"] = 10000;
       updateProps(globalCard);
       startAnim();
       showOnStart = false;
       addedGlobal = true;
     }
-    if(addedGlobal && isSceneLoaded()) {
+    else if(addedGlobal && isSceneLoaded()) {
       addedGlobal = false;
+      startTime = timestamp;
+      reverseAnim();
       setTimeout(()=>{
         endAnim();
-      }, 2000)
+      }, (globalCard.animationTime/2.0) * 1000.0);
     }
     
-    for(let i=0; i<boxes.length; i++) { 
-      let timeFactor = zones[i].timeFactor || globalProps.timeFactor;
-      let animTime = zones[i].animTime || globalProps.animTime;
+    for(let i=0; i<boxes.length; i++) {
+      let animTime = (zones[i].animationTime || globalProps.animationTime) ?? 6.0;
       if(boxes[i].containsPoint(localPlayer.position)) {
         if(!added[i] && !shownOnce[i]) {
           startTime = timestamp;
           startAnim(i);
         }
-        if((((timestamp - startTime)/1000) * timeFactor) % animTime > animTime - 0.1 && added[i]) {
-          endAnim(i);
+        else if(timestamp - startTime >= (animTime/2.0) * 1000.0 && added[i]) {
+          if(!reverse) {
+            startTime = timestamp;
+            reverseAnim();
+            reverse = true;
+          }
+          else {
+            endAnim(i);
+            reverse = false
+          }
         }
       } else {
-        if((((timestamp - startTime)/1000) * timeFactor) % animTime > animTime - 0.1 && added[i]) {
-          endAnim(i);
+        if(timestamp - startTime >= (animTime/2.0) * 1000.0 && added[i]) {
+          if(!reverse) {
+            startTime = timestamp;
+            reverseAnim();
+            reverse = true;
+          }
+          else {
+            endAnim(i);
+            reverse = false
+          }
         }
         shownOnce[i] = false;
       }
@@ -183,50 +202,72 @@ export default e => {
       added[i] = false;
   }
 
+  const reverseAnim = () => {
+    updateStartTime();
+    for(const child of textApp.children) {
+      child.material.uniforms.startValue.value = 6.0;
+      child.material.uniforms.endValue.value = 0.0;
+    }
+    let uniforms = eyeblasterApp.children[0].material.uniforms;
+    uniforms.startValue.value = 6.0;
+    uniforms.endValue.value = 0.0
+    uniforms.hBgWidthOffset.value = uniforms.hBgWidth.value*2;
+    uniforms.shBgWidthOffset.value = uniforms.shBgWidth.value*2;
+    uniforms.alphaFlip.value = 1.0;
+  }
+
   const updateStartTime = () => {
-    for(let i in app.children) {
-      app.children[i].material.uniforms.startTime.value = startTime/1000;
+    for(const child of textApp.children) {
+      child.material.uniforms.startTime.value = startTime/1000;
     }
-  }
-
-  const addApp = () => {
-    if(!!textApp && !!eyeblasterApp) {
-      postSceneOrthographic.add(app);
-    }
-  }
-
-  const removeApp = () => {
-    if(!!textApp && !!eyeblasterApp) {
-      postSceneOrthographic.remove(app);
-    }
+    eyeblasterApp.children[0].material.uniforms.startTime.value = startTime/1000;
   }
 
   const updateProps = (zoneProps) => {
-    const {heading, subHeading, text, textColor, pColorOne, pColorTwo, bgColor, arrowColor, hBgWidth, shBgWidth, timeFactor, animTime} = zoneProps;
+    const {
+      heading=globalProps.heading ?? 'HEADING',
+      subHeading = globalProps.subHeading ?? 'SUBHEADING',
+      text = globalProps.text ?? 'TEXT',
+      textColor = globalProps.textColor ?? 0xffffff,
+      primaryColorOne = globalProps.primaryColorOne ?? 0x000000,
+      primaryColorTwo = globalProps.primaryColorTwo ?? 0xffffff,
+      backgroundColor = globalProps.backgroundColor ?? 0x202020,
+      arrowColor = globalProps.arrowColor ?? 0xffffff,
+      headingBgWidth = globalProps.headingBgWidth ?? 0.35,
+      subHeadingBgWidth = globalProps.subHeadingBgWidth ?? 0.28,
+      animationTime = globalProps.animationTime ?? 6.0
+    } = zoneProps;
     
-    app.children[1].text = heading || globalProps.heading;
-    app.children[2].text = subHeading || globalProps.subHeading;
-    app.children[3].text = text || globalProps.text;
+    textApp.children[1].text = heading;
+    textApp.children[2].text = subHeading;
+    textApp.children[3].text = text;
 
-    for(let i=0; i< app.children.length - 1; i++) {
-      app.children[i].material.uniforms.color.value = new THREE.Color().setHex(textColor || globalProps.textColor);
-      app.children[i].material.uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
-      app.children[i].material.uniforms.animTime.value = animTime || globalProps.animTime;
+    for(const child of textApp.children) {
+      let uniforms = child.material.uniforms;
+      
+      uniforms.color.value = new THREE.Color().setHex(textColor);
+      uniforms.animTime.value = animationTime;
+      uniforms.startValue.value = 0.0;
+      uniforms.endValue.value = 6.0;
     }
 
-    let uniforms = app.children[app.children.length - 1].material.uniforms;
+    let uniforms = eyeblasterApp.children[0].material.uniforms;
 
-    uniforms.pColorOne.value = new THREE.Color().setHex(pColorOne || globalProps.pColorOne);
-    uniforms.pColorTwo.value = new THREE.Color().setHex(pColorTwo || globalProps.pColorTwo);
-    uniforms.arrowColor.value = new THREE.Color().setHex(arrowColor || globalProps.arrowColor);
-    uniforms.hBgWidth.value = hBgWidth || globalProps.hBgWidth;
-    uniforms.shBgWidth.value = shBgWidth || globalProps.shBgWidth;
-    uniforms.timeFactor.value = timeFactor || globalProps.timeFactor;
-    uniforms.animTime.value = animTime || globalProps.animTime;
+    uniforms.pColorOne.value = new THREE.Color().setHex(primaryColorOne);
+    uniforms.pColorTwo.value = new THREE.Color().setHex(primaryColorTwo);
+    uniforms.arrowColor.value = new THREE.Color().setHex(arrowColor);
+    uniforms.hBgWidth.value = headingBgWidth;
+    uniforms.shBgWidth.value = subHeadingBgWidth;
+    uniforms.animTime.value = animationTime;
     uniforms.showBg.value = false;
+    uniforms.startValue.value = 0.0;
+    uniforms.endValue.value = 6.0;
+    uniforms.hBgWidthOffset.value = 0.0;
+    uniforms.shBgWidthOffset.value = 0.0;
+    uniforms.alphaFlip.value = 0.0;
 
     if(showOnStart) {
-      uniforms.bgColor.value = new THREE.Color().setHex(bgColor || globalProps.bgColor);
+      uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
       uniforms.showBg.value = showOnStart;
     }
   }
@@ -240,6 +281,13 @@ export default e => {
       if (subApp) {
         postSceneOrthographic.remove(subApp);
         subApp.destroy();
+      }
+    }
+    if(showBoxHelper) {
+      for(const boxHelper of boxHelpers) {
+        if (boxHelper) {
+          scene.remove(boxHelper);
+        }
       }
     }
   });

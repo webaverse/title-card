@@ -16,10 +16,6 @@
       value: null,
       needsUpdate: true,
     },
-    timeFactor: {
-      value: 4.0,
-      needsUpdate: true,
-    },
     animTime: {
       value: 6.0,
       needsUpdate: true,
@@ -51,7 +47,27 @@
     showBg: {
       value: false,
       needsUpdate: true,
-    }
+    },
+    startValue: {
+      value: 0.0,
+      needsUpdate: true,
+    },
+    endValue: {
+      value: 0.0,
+      needsUpdate: true,
+    },
+    hBgWidthOffset: {
+      value: 0.0,
+      needsUpdate: true,
+    },
+    shBgWidthOffset: {
+      value: 0.0,
+      needsUpdate: true,
+    },
+    alphaFlip: {
+      value: 0.0,
+      needsUpdate: true,
+    },
   },
   vertexShader: `\
     precision highp float;
@@ -73,7 +89,6 @@
 
     uniform float iTimeS;
     uniform float startTime;
-    uniform float timeFactor;
     uniform float animTime;
     uniform vec3 pColorOne;
     uniform vec3 pColorTwo;
@@ -81,7 +96,12 @@
     uniform vec3 arrowColor;
     uniform float hBgWidth;
     uniform float shBgWidth;
+    uniform float startValue;
+    uniform float endValue;
     uniform bool showBg;
+    uniform float hBgWidthOffset;
+    uniform float shBgWidthOffset;
+    uniform float alphaFlip;
 
     varying vec2 vUv;
     
@@ -178,17 +198,20 @@
     void main() {
       vec4 color = vec4(0.0);
       
+      float f = (iTimeS - startTime) / ((startTime + animTime/2.0) - startTime);
+      f = clamp(f, 0., 1.);
+      float v = startValue + (endValue - startValue) * f;
+      
       if(showBg) {
         color = vec4(bgColor, 1.0);
       }
 
       {
         //// color part
-        float f = mod((iTimeS - startTime) * timeFactor, animTime);
-        f = min(1.49, f);    
+        float offSet = max(-1.49, min(1.49, v));
         
-        vec2 bottomLeft = vec2(-0.7, 1.5 - f);
-        vec2 topRight = vec2(-0.5, 2.0 - f);
+        vec2 bottomLeft = vec2(-0.7, 1.5 - offSet);
+        vec2 topRight = vec2(-0.5, 2.0 - offSet);
         if (
           insideAABB(vUv, bottomLeft, topRight)
         ) {
@@ -200,32 +223,31 @@
 
 
       {
-        #define NUM_ARROWS 10
-        
+        //// arrows 
         float width = 0.015;
         float height = 0.1;
-        float f = mod((iTimeS - startTime) * timeFactor, animTime);
-        float eq = mod((iTimeS - startTime) * 1.0, 0.35);
-        f = min(1.49, f);
-        vec2 pos = vec2(-0.6, 2.1 - f - 0.2 * eq);
         vec2 distance = vec2(0.0, 0.07);
+        float eq = mod(iTimeS, 0.35);
+        float offSet = max(-1.49, min(1.49, v));
+        vec2 pos = vec2(-0.6, 2.1 - offSet - 0.2 * eq);
         vec3 aColor = arrowColor;
-
-        for(int i = 0; i < NUM_ARROWS; i++) {
+        
+        #pragma unroll_loop_start
+        for(int i = 0; i < 11; i++) {
           color = createArrow(vec2(pos.x, pos.y), width, height, aColor, color);
           pos -= distance;
         }
+        #pragma unroll_loop_end
       }
 
       {
         //// black part
+        float offSet = max(-1.49, min(1.49, v));
         
-        float f = mod((iTimeS - startTime) * timeFactor, animTime);
-        f = min(1.49, f);
+        vec2 bottomLeftb = vec2(-0.7, 1.3 - offSet);
+        vec2 topRightb = vec2(-0.5, 1.5 - offSet);
         
-        vec2 bottomLeftb = vec2(-0.7, 1.3 - f);
-        vec2 topRightb = vec2(-0.5, 1.5 - f);
-        // derived
+        //// derived
         float width = topRightb.x - bottomLeftb.x;
         vec2 bottomRight = bottomLeftb + vec2(width, 0.);
         vec2 center = bottomLeftb + vec2(width/2., 0.);
@@ -248,39 +270,34 @@
 
       {
         //// heading
-        float f = mod((iTimeS - startTime) * timeFactor, animTime);
-        if (f > 0.99)
         {
-          {
-            f = min(1.99, f);
-            vec2 bottomLeft = vec2(1.0 + 0.99 - f, 0.1);
-            vec2 topRight = vec2((1. + hBgWidth)  + 0.99 - f, 0.175);
-            if (
-              insideAABB(vUv, bottomLeft, topRight)
-            ) {
-              color.rgb = pColorOne;
-              color.a = 1.;
-            }
+          float offSet = min(1.99, v);
+          vec2 bottomLeft = vec2(1.0 + 0.99 - offSet, 0.1);
+          vec2 topRight = vec2((1. + hBgWidth)  + 0.99 - offSet, 0.175);
+          if (
+            insideAABB(vUv, bottomLeft, topRight)
+          ) {
+            color.rgb = pColorOne;
+            color.a = 1.;
           }
-          //// trail
-          f = mod((iTimeS - startTime) * timeFactor, animTime);
-          {
-            f = min(1.99, f);
-            if(f == 1.99)
-              f = 0.0;
-            vec2 bottomLeft = vec2((1. + hBgWidth) + 0.99 - f, 0.1);
-            vec2 topRight = vec2((1. + hBgWidth*2. + hBgWidth/2.) + 0.99 - f, 0.175);
-            if (
-              insideAABB(vUv, bottomLeft, topRight)
-            ) {
-              float alpha = topRight.x - vUv.x;
-              if(showBg) {
-                color.rgb = pColorOne * alpha + bgColor * (1.0 - alpha);
-                color.a = 1.0;
-              } else {
-                color.rgb = pColorOne;
-                color.a = alpha;
-              }
+        }
+        //// heading trail
+        {
+          float offSet = min(1.99, v);
+          if(offSet == 1.99)
+            offSet = 0.0;
+          vec2 bottomLeft = vec2((1. + hBgWidth - hBgWidthOffset) + 0.99 - offSet, 0.1);
+          vec2 topRight = vec2((1. + hBgWidth*2. - hBgWidthOffset) + 0.99 - offSet, 0.175);
+          if (
+            insideAABB(vUv, bottomLeft, topRight)
+          ) {
+            float alpha = abs(alphaFlip - (((topRight.x - vUv.x) * 0.5) + 0.5));
+            if(showBg) {
+              color.rgb = pColorOne * alpha + bgColor * (1.0 - alpha);
+              color.a = 1.0;
+            } else {
+              color.rgb = pColorOne;
+              color.a = alpha;
             }
           }
         }
@@ -288,39 +305,34 @@
 
       {
         //// sub-heading
-        float f = mod((iTimeS - startTime) * timeFactor, animTime);
-        if (f > 1.99)
         {
-          {
-            f = min(2.99, f);
-            vec2 bottomLeft = vec2(1.0 + 1.99 - f, 0.025);
-            vec2 topRight = vec2((1. + shBgWidth) + 1.99 - f, 0.075);
-            if (
-              insideAABB(vUv, bottomLeft, topRight)
-            ) {
-              color.rgb = pColorOne;
-              color.a = 1.;
-            }
+          float offSet = min(2.99, v);
+          vec2 bottomLeft = vec2(1.0 + 1.99 - offSet, 0.025);
+          vec2 topRight = vec2((1. + shBgWidth) + 1.99 - offSet, 0.075);
+          if (
+            insideAABB(vUv, bottomLeft, topRight)
+          ) {
+            color.rgb = pColorOne;
+            color.a = 1.;
           }
-          //// trail
-          f = mod((iTimeS - startTime) * timeFactor, animTime);
-          {
-            f = min(2.99, f);
-            if(f == 2.99)
-              f = 0.0;
-            vec2 bottomLeft = vec2((1. + shBgWidth) + 1.99 - f, 0.025);
-            vec2 topRight = vec2((1. + shBgWidth*2. + shBgWidth/2.) + 1.99 - f, 0.075);
-            if (
-              insideAABB(vUv, bottomLeft, topRight)
-            ) {
-              float alpha = topRight.x - vUv.x;
-              if(showBg) {
-                color.rgb = pColorOne * alpha + bgColor * (1.0 - alpha);
-                color.a = 1.0;
-              } else {
-                color.rgb = pColorOne;
-                color.a = alpha;
-              }
+        }
+        //// sub-heading trail
+        {
+          float offSet = min(2.99, v);
+          if(offSet == 2.99)
+            offSet = 0.0;
+          vec2 bottomLeft = vec2((1. + shBgWidth - shBgWidthOffset) + 1.99 - offSet, 0.025);
+          vec2 topRight = vec2((1. + shBgWidth*2. - shBgWidthOffset) + 1.99 - offSet, 0.075);
+          if (
+            insideAABB(vUv, bottomLeft, topRight)
+          ) {
+            float alpha = abs(alphaFlip - (((topRight.x - vUv.x) * 0.5) + 0.5));
+            if(showBg) {
+              color.rgb = pColorOne * alpha + bgColor * (1.0 - alpha);
+              color.a = 1.0;
+            } else {
+              color.rgb = pColorOne;
+              color.a = alpha;
             }
           }
         }
