@@ -214,7 +214,6 @@ export default e => {
     uniforms.endValue.value = 0.0
     uniforms.hBgWidthOffset.value = uniforms.hBgWidth.value*2;
     uniforms.shBgWidthOffset.value = uniforms.shBgWidth.value*2;
-    uniforms.alphaFlip.value = 1.0;
   }
 
   const updateStartTime = () => {
@@ -265,7 +264,6 @@ export default e => {
     uniforms.endValue.value = 6.0;
     uniforms.hBgWidthOffset.value = 0.0;
     uniforms.shBgWidthOffset.value = 0.0;
-    uniforms.alphaFlip.value = 0.0;
 
     if(showOnStart) {
       uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
