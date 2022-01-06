@@ -20,12 +20,16 @@
       value: 6.0,
       needsUpdate: true,
     },
-    pColorOne: {
+    pColor1: {
       value: [0, 1, 0],
       needsUpdate: true,
     },
-    pColorTwo: {
+    pColor2: {
       value: [1, 1, 0],
+      needsUpdate: true,
+    },
+    pColor3: {
+      value: [0, 0, 0],
       needsUpdate: true,
     },
     bgColor: {
@@ -86,8 +90,9 @@
     uniform float iTimeS;
     uniform float startTime;
     uniform float animTime;
-    uniform vec3 pColorOne;
-    uniform vec3 pColorTwo;
+    uniform vec3 pColor1;
+    uniform vec3 pColor2;
+    uniform vec3 pColor3;
     uniform vec3 bgColor;
     uniform vec3 arrowColor;
     uniform float hBgWidth;
@@ -114,8 +119,8 @@
 
     // return 1 if v inside the box, return 0 otherwise
     bool insideAABB(vec2 v, vec2 bottomLeft, vec2 topRight) {
-        vec2 s = step(bottomLeft, v) - step(topRight, v);
-        return s.x * s.y > 0.;   
+      vec2 s = step(bottomLeft, v) - step(topRight, v);
+      return s.x * s.y > 0.;
     }
 
     bool isPointInTriangle(vec2 point, vec2 a, vec2 b, vec2 c) {
@@ -203,15 +208,16 @@
 
       {
         //// color part
-        float offSet = max(-1.49, min(1.49, v));
-        
-        vec2 bottomLeft = vec2(-0.7, 1.5 - offSet);
-        vec2 topRight = vec2(-0.5, 2.0 - offSet);
+        // float offSet = max(-1.49, min(1.49, v));
+        float offset = v;
+
+        vec2 bottomLeft = vec2(-0.7, 1.5 - offset);
+        vec2 topRight = vec2(-0.5, 2.0 - offset);
         if (
           insideAABB(vUv, bottomLeft, topRight)
         ) {
           vec3 equation = vec3(0.5 * cos(12.5664 * vUv.y) + 0.5);
-          color.rgb = mix(pColorOne, pColorTwo, equation);
+          color.rgb = mix(pColor1, pColor2, equation);
           color.a = 1.;
         } 
       }
@@ -223,8 +229,8 @@
         float height = 0.1;
         vec2 distance = vec2(0.0, 0.07);
         float eq = mod(iTimeS, 0.35);
-        float offSet = max(-1.49, min(1.49, v));
-        vec2 pos = vec2(-0.6, 2.1 - offSet - 0.2 * eq);
+        float offset = max(-1.49, min(1.49, v));
+        vec2 pos = vec2(-0.6, 2.1 - offset - 0.2 * eq);
         vec3 aColor = arrowColor;
         
         #pragma unroll_loop_start
@@ -237,10 +243,10 @@
 
       {
         //// black part
-        float offSet = max(-1.49, min(1.49, v));
+        float offset = max(-1.49, min(1.49, v));
         
-        vec2 bottomLeftb = vec2(-0.7, 1.3 - offSet);
-        vec2 topRightb = vec2(-0.5, 1.5 - offSet);
+        vec2 bottomLeftb = vec2(-0.7, 1.3 - offset);
+        vec2 topRightb = vec2(-0.5, 1.5 - offset);
         
         //// derived
         float width = topRightb.x - bottomLeftb.x;
@@ -249,12 +255,7 @@
         vec2 tipLeft = bottomLeftb + vec2(0., -0.08);
         vec2 tipRight = bottomRight + vec2(0., -0.08);
         if (
-          insideAABB(vUv, bottomLeftb, topRightb)
-        ) {
-          color.rgb = vec3(0.0);
-          color.a = 1.;
-        }
-        if (
+          insideAABB(vUv, bottomLeftb, topRightb) ||
           isPointInTriangle(vUv, bottomLeftb, tipLeft, center) ||
           isPointInTriangle(vUv, bottomRight, tipRight, center)
         ) {
@@ -266,13 +267,13 @@
       {
         //// heading
         {
-          float offSet = min(1.99, v);
-          vec2 bottomLeft = vec2(1.0 + 0.99 - offSet, 0.1);
-          vec2 topRight = vec2((1. + hBgWidth)  + 0.99 - offSet, 0.175);
+          float offset = min(1.99, v);
+          vec2 bottomLeft = vec2(1.0 + 0.99 - offset, 0.1);
+          vec2 topRight = vec2((1. + hBgWidth)  + 0.99 - offset, 0.175);
           if (
             insideAABB(vUv, bottomLeft, topRight)
           ) {
-            color.rgb = pColorOne;
+            color.rgb = pColor1;
             color.a = 1.;
           }
         }
@@ -281,13 +282,13 @@
       {
         //// sub-heading
         {
-          float offSet = min(2.99, v);
-          vec2 bottomLeft = vec2(1.0 + 1.99 - offSet, 0.025);
-          vec2 topRight = vec2((1. + shBgWidth) + 1.99 - offSet, 0.075);
+          float offset = min(2.99, v);
+          vec2 bottomLeft = vec2(1.0 + 1.99 - offset, 0.025);
+          vec2 topRight = vec2((1. + shBgWidth) + 1.99 - offset, 0.075);
           if (
             insideAABB(vUv, bottomLeft, topRight)
           ) {
-            color.rgb = pColorOne;
+            color.rgb = pColor1;
             color.a = 1.;
           }
         }
@@ -298,7 +299,4 @@
   `,
   transparent: true,
   // depthTest: true,
-  // polygonOffset: true,
-  // polygonOffsetFactor: -1,
-  // polygonOffsetUnits: 1,
 }

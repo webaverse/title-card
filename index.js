@@ -52,7 +52,7 @@ export default e => {
 
     const promises = [];
     promises.push((async () => {
-      let u2 = `https://webaverse.github.io/title-card/eyeblaster.gltj`;
+      let u2 = `../title-card/eyeblaster.gltj`;
       if (/^https?:/.test(u2)) {
         u2 = "/@proxy/" + u2;
       }
@@ -74,7 +74,7 @@ export default e => {
       await eyeblasterApp.addModule(m);
     })());
     promises.push((async () => {
-      let u2 = `https://webaverse.github.io/title-card-text/`;
+      let u2 = `../title-card-text/`;
       if (/^https?:/.test(u2)) {
         u2 = "/@proxy/" + u2;
       }
@@ -229,8 +229,9 @@ export default e => {
       subHeading = globalProps.subHeading ?? 'SUBHEADING',
       text = globalProps.text ?? 'TEXT',
       textColor = globalProps.textColor ?? 0xffffff,
-      primaryColorOne = globalProps.primaryColorOne ?? 0x000000,
-      primaryColorTwo = globalProps.primaryColorTwo ?? 0xffffff,
+      primaryColor1 = globalProps.primaryColor1 ?? 0x000000,
+      primaryColor2 = globalProps.primaryColor2 ?? 0xffffff,
+      primaryColor3 = globalProps.primaryColor3 ?? 0xffffff,
       backgroundColor = globalProps.backgroundColor ?? 0x202020,
       arrowColor = globalProps.arrowColor ?? 0xffffff,
       headingBgWidth = globalProps.headingBgWidth ?? 0.35,
@@ -253,8 +254,9 @@ export default e => {
 
     let uniforms = eyeblasterApp.children[0].material.uniforms;
 
-    uniforms.pColorOne.value = new THREE.Color().setHex(primaryColorOne);
-    uniforms.pColorTwo.value = new THREE.Color().setHex(primaryColorTwo);
+    uniforms.pColor1.value = new THREE.Color().setHex(primaryColor1);
+    uniforms.pColor2.value = new THREE.Color().setHex(primaryColor2);
+    uniforms.pColor3.value = new THREE.Color().setHex(primaryColor3);
     uniforms.arrowColor.value = new THREE.Color().setHex(arrowColor);
     uniforms.hBgWidth.value = headingBgWidth;
     uniforms.shBgWidth.value = subHeadingBgWidth;
