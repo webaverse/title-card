@@ -21,6 +21,8 @@ export default e => {
   let textApp = null;
   const subApps = [null, null];
 
+  const _parseColor = s => parseInt(s.slice(2), 16);
+
   class Zone {
     constructor({
       boundingBox,
@@ -50,18 +52,20 @@ export default e => {
       this.subHeadingBgWidth = subHeadingBgWidth;
       this.animationTime = animationTime;
       this.showBg = showBg;
+
+      console.log(this);
     }
     update() {
       const {
         heading = 'HEADING',
         subHeading = 'SUBHEADING',
         text = 'TEXT',
-        textColor = 0xffffff,
-        primaryColor1 = 0x000000,
-        primaryColor2 = 0xffffff,
-        primaryColor3 = 0xffffff,
-        backgroundColor = 0x202020,
-        arrowColor = 0xffffff,
+        textColor = '0xffffff',
+        primaryColor1 = '0x000000',
+        primaryColor2 = '0xffffff',
+        primaryColor3 = '0xffffff',
+        backgroundColor = '0x202020',
+        arrowColor = '0xffffff',
         headingBgWidth = 0.35,
         subHeadingBgWidth = 0.28,
         animationTime = 6.0,
@@ -75,7 +79,7 @@ export default e => {
       for (const child of textApp.children) {
         let uniforms = child.material.uniforms;
         
-        uniforms.color.value = new THREE.Color().setHex(textColor);
+        uniforms.color.value.setHex(_parseColor(textColor));
         uniforms.animTime.value = animationTime;
         uniforms.startValue.value = 0.0;
         uniforms.endValue.value = 6.0;
@@ -83,10 +87,22 @@ export default e => {
 
       let uniforms = eyeblasterApp.children[0].material.uniforms;
 
-      uniforms.pColor1.value = new THREE.Color().setHex(primaryColor1);
-      uniforms.pColor2.value = new THREE.Color().setHex(primaryColor2);
-      uniforms.pColor3.value = new THREE.Color().setHex(primaryColor3);
-      uniforms.arrowColor.value = new THREE.Color().setHex(arrowColor);
+      if (Array.isArray(uniforms.pColor1.value)) {
+        uniforms.pColor1.value = new THREE.Color().fromArray(uniforms.pColor1.value);
+      }
+      if (Array.isArray(uniforms.pColor2.value)) {
+        uniforms.pColor2.value = new THREE.Color().fromArray(uniforms.pColor2.value);
+      }
+      if (Array.isArray(uniforms.pColor3.value)) {
+        uniforms.pColor3.value = new THREE.Color().fromArray(uniforms.pColor3.value);
+      }
+      if (Array.isArray(uniforms.arrowColor.value)) {
+        uniforms.arrowColor.value = new THREE.Color().fromArray(uniforms.arrowColor.value);
+      }
+      uniforms.pColor1.value.setHex(_parseColor(primaryColor1));
+      uniforms.pColor2.value.setHex(_parseColor(primaryColor2));
+      uniforms.pColor3.value.setHex(_parseColor(primaryColor3));
+      uniforms.arrowColor.value.setHex(_parseColor(arrowColor));
       uniforms.hBgWidth.value = headingBgWidth;
       uniforms.shBgWidth.value = subHeadingBgWidth;
       uniforms.animTime.value = animationTime;
@@ -94,8 +110,12 @@ export default e => {
       uniforms.endValue.value = 6.0;
       uniforms.hBgWidthOffset.value = 0.0;
       uniforms.shBgWidthOffset.value = 0.0;
+window.uniforms = uniforms;
 
       if (showBg) {
+        if (Array.isArray(uniforms.bgColor.value)) {
+          uniforms.bgColor.value = new THREE.Color().fromArray(uniforms.bgColor.value);
+        }
         uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
         uniforms.showBg.value = true;
       } else {
@@ -195,7 +215,7 @@ export default e => {
     } = zoneSpec;
     
     const isGlobal = !dimensions;
-    const boundingBox = isGlobal ? new THREE.Box3(
+    const boundingBox = !isGlobal ? new THREE.Box3(
       new THREE.Vector3().fromArray(dimensions[0]), 
       new THREE.Vector3().fromArray(dimensions[1])
     ) : new THREE.Box3(
@@ -226,7 +246,7 @@ export default e => {
     }      
     return zone;
   });
-  const globalZone = zones.find(zome => !isFinite(zome.boundingBox.min.x)) || null;
+  const globalZone = zones.find(zone => !isFinite(zone.boundingBox.min.x)) || null;
   
   const _getCurrentPlayerZone = () => zones.find(z => z.boundingBox.containsPoint(localPlayer.position)) || null;
   
