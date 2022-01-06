@@ -34,7 +34,7 @@ export default e => {
   let showBoxHelper = app.getComponent("boxHelper");
   
   e.waitUntil((async () => {
-    {
+    /* {
       const promise = new Promise(function(resolve, reject) {
         preloadFont(
           {
@@ -48,33 +48,10 @@ export default e => {
       })
 
       await promise;
-    }
+    } */
 
-    {
-      let u2 = `https://webaverse.github.io/title-card-text/`;
-      if (/^https?:/.test(u2)) {
-        u2 = "/@proxy/" + u2;
-      }
-
-      const m = await metaversefile.import(u2);
-
-      textApp = metaversefile.createApp();
-
-      textApp.contentId = u2;
-      textApp.instanceId = getNextInstanceId();
-      textApp.position.copy(app.position);
-      textApp.quaternion.copy(app.quaternion);
-      textApp.scale.copy(app.scale);
-      textApp.updateMatrixWorld();
-      textApp.name = "text";
-
-      subApps[0] = textApp;
-
-      await textApp.addModule(m);
-      app.add(textApp);
-    }
-
-    {
+    const promises = [];
+    promises.push((async () => {
       let u2 = `https://webaverse.github.io/title-card/eyeblaster.gltj`;
       if (/^https?:/.test(u2)) {
         u2 = "/@proxy/" + u2;
@@ -95,8 +72,32 @@ export default e => {
       subApps[1] = eyeblasterApp;
 
       await eyeblasterApp.addModule(m);
-      app.add(eyeblasterApp);
-    }
+    })());
+    promises.push((async () => {
+      let u2 = `https://webaverse.github.io/title-card-text/`;
+      if (/^https?:/.test(u2)) {
+        u2 = "/@proxy/" + u2;
+      }
+
+      const m = await metaversefile.import(u2);
+
+      textApp = metaversefile.createApp();
+
+      textApp.contentId = u2;
+      textApp.instanceId = getNextInstanceId();
+      textApp.position.copy(app.position);
+      textApp.quaternion.copy(app.quaternion);
+      textApp.scale.copy(app.scale);
+      textApp.updateMatrixWorld();
+      textApp.name = "text";
+
+      subApps[0] = textApp;
+
+      await textApp.addModule(m);
+    })());
+    await Promise.all(promises);
+    app.add(eyeblasterApp);
+    app.add(textApp);
     
     appsLoaded = true;
     app.visible = false;
