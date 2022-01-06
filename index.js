@@ -5,64 +5,106 @@ const { useApp, useScene, usePostOrthographicScene, getNextInstanceId, useCleanu
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, "$1");
 
-let _update = null;
-
-let app = null;
-let eyeblasterApp = null;
-let textApp = null;
-let subApps = [null, null];
-/* let zones = null;
-let globalCard = null;
-let globalCardIndex = -1;
-let globalProps = null;
-
-let boxes = [];
-let boxHelpers = [];
-let shownOnce = [];
-let hasBg = [];
-let added = [];
-
-let appsLoaded = false; */
-
-class Zone {
-  constructor({
-    boundingBox,
-    heading,
-    subHeading,
-    text,
-    textColor,
-    primaryColor1,
-    primaryColor2,
-    primaryColor3,
-    arrowColor,
-    headingBgWidth,
-    subHeadingBgWidth,
-    animationTime,
-  }) {
-    this.boundingBox = boundingBox;
-    this.heading = heading;
-    this.subHeading = subHeading;
-    this.text = text;
-    this.textColor = textColor;
-    this.primaryColor1 = primaryColor1;
-    this.primaryColor2 = primaryColor2;
-    this.primaryColor3 = primaryColor3;
-    this.arrowColor = arrowColor;
-    this.headingBgWidth = headingBgWidth;
-    this.subHeadingBgWidth = subHeadingBgWidth;
-    this.animationTime = animationTime;
-  }
-}
-
 export default e => {
-  app = useApp();
+  const app = useApp();
   const postSceneOrthographic = usePostOrthographicScene();
   const scene = useScene();
   const localPlayer = useLocalPlayer();
+
   app.name = 'title-card';
 
   const showBoxHelper = app.getComponent('boxHelper');
-  
+
+  let _update = null;
+
+  let eyeblasterApp = null;
+  let textApp = null;
+  const subApps = [null, null];
+
+  class Zone {
+    constructor({
+      boundingBox,
+      heading,
+      subHeading,
+      text,
+      textColor,
+      primaryColor1,
+      primaryColor2,
+      primaryColor3,
+      arrowColor,
+      headingBgWidth,
+      subHeadingBgWidth,
+      animationTime,
+      showBg,
+    }) {
+      this.boundingBox = boundingBox;
+      this.heading = heading;
+      this.subHeading = subHeading;
+      this.text = text;
+      this.textColor = textColor;
+      this.primaryColor1 = primaryColor1;
+      this.primaryColor2 = primaryColor2;
+      this.primaryColor3 = primaryColor3;
+      this.arrowColor = arrowColor;
+      this.headingBgWidth = headingBgWidth;
+      this.subHeadingBgWidth = subHeadingBgWidth;
+      this.animationTime = animationTime;
+      this.showBg = showBg;
+    }
+    update() {
+      const {
+        heading = 'HEADING',
+        subHeading = 'SUBHEADING',
+        text = 'TEXT',
+        textColor = 0xffffff,
+        primaryColor1 = 0x000000,
+        primaryColor2 = 0xffffff,
+        primaryColor3 = 0xffffff,
+        backgroundColor = 0x202020,
+        arrowColor = 0xffffff,
+        headingBgWidth = 0.35,
+        subHeadingBgWidth = 0.28,
+        animationTime = 6.0,
+        showBg = false,
+      } = this;
+      
+      textApp.children[1].text = heading;
+      textApp.children[2].text = subHeading;
+      textApp.children[3].text = text;
+
+      for (const child of textApp.children) {
+        let uniforms = child.material.uniforms;
+        
+        uniforms.color.value = new THREE.Color().setHex(textColor);
+        uniforms.animTime.value = animationTime;
+        uniforms.startValue.value = 0.0;
+        uniforms.endValue.value = 6.0;
+      }
+
+      let uniforms = eyeblasterApp.children[0].material.uniforms;
+
+      uniforms.pColor1.value = new THREE.Color().setHex(primaryColor1);
+      uniforms.pColor2.value = new THREE.Color().setHex(primaryColor2);
+      uniforms.pColor3.value = new THREE.Color().setHex(primaryColor3);
+      uniforms.arrowColor.value = new THREE.Color().setHex(arrowColor);
+      uniforms.hBgWidth.value = headingBgWidth;
+      uniforms.shBgWidth.value = subHeadingBgWidth;
+      uniforms.animTime.value = animationTime;
+      uniforms.startValue.value = 0.0;
+      uniforms.endValue.value = 6.0;
+      uniforms.hBgWidthOffset.value = 0.0;
+      uniforms.shBgWidthOffset.value = 0.0;
+
+      if (showBg) {
+        uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
+        uniforms.showBg.value = true;
+      } else {
+        uniforms.showBg.value = false;
+      }
+    }
+  }
+
+  let appsLoaded = false;
   e.waitUntil((async () => {
     /* {
       const promise = new Promise(function(resolve, reject) {
@@ -80,7 +122,6 @@ export default e => {
       await promise;
     } */
 
-    let appsLoaded = false;
     const promises = [];
     promises.push((async () => {
       let u2 = `../title-card/eyeblaster.gltj`;
@@ -137,7 +178,7 @@ export default e => {
 
   const boxHelpers = [];
   const zones = (app.getComponent('zones') ?? []).map(zoneSpec => {
-    const {
+    let {
       heading,
       subHeading,
       text,
@@ -150,15 +191,18 @@ export default e => {
       subHeadingBgWidth,
       animationTime,
       dimensions,
+      showBg,
     } = zoneSpec;
     
-    const boundingBox = dimensions ? new THREE.Box3(
+    const isGlobal = !dimensions;
+    const boundingBox = isGlobal ? new THREE.Box3(
       new THREE.Vector3().fromArray(dimensions[0]), 
       new THREE.Vector3().fromArray(dimensions[1])
     ) : new THREE.Box3(
       new THREE.Vector3(-Infinity, -Infinity, -Infinity), 
       new THREE.Vector3(Infinity, Infinity, Infinity)
     );
+    showBg = showBg ?? (isGlobal ? true : false);
     const zone = new Zone({
       boundingBox,
       heading,
@@ -172,6 +216,7 @@ export default e => {
       headingBgWidth,
       subHeadingBgWidth,
       animationTime,
+      showBg,
     });
     if (showBoxHelper) {
       const boxHelper = new THREE.Box3Helper(boundingBox, 0x00ff00);
@@ -181,10 +226,25 @@ export default e => {
     }      
     return zone;
   });
+  const globalZone = zones.find(zome => !isFinite(zome.boundingBox.min.x)) || null;
+  
+  const _getCurrentPlayerZone = () => zones.find(z => z.boundingBox.containsPoint(localPlayer.position)) || null;
   
   let lastZone = null;
   _update = (timestamp, timeDiff) => {
-    if (showOnStart && !addedGlobal && appsLoaded) {
+    let currentZone;
+    if (globalZone && !isSceneLoaded()) {
+      currentZone = globalZone;
+    } else {
+      currentZone = _getCurrentPlayerZone();
+    }
+
+    if (currentZone) {
+      appsLoaded && currentZone.update();
+    }
+    lastZone = currentZone;
+
+    /* if (showOnStart && !addedGlobal && appsLoaded) {
       startTime = timestamp;
       globalCard = zones.splice(globalCardIndex, 1)[0];
       updateProps(globalCard);
@@ -319,7 +379,7 @@ export default e => {
     if(showOnStart) {
       uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
       uniforms.showBg.value = showOnStart;
-    }
+    } */
   }
 
   useFrame(({timestamp, timeDiff}) => {
