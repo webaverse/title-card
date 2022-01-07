@@ -220,9 +220,9 @@
 
       {
         //// arrows 
-        float width = 0.015*1400./iResolution.y;
-        float height = 0.11;
-        vec2 distance = vec2(0.0, 0.07*1400./iResolution.y);
+        float width = 0.012;
+        float height = 0.16*1400./iResolution.x;
+        vec2 distance = vec2(0.0, 0.07);
         float eq = mod(iTimeS, 0.35);
         // float offset = max(-1.49, min(1.49, v));
         float offset = 0.;
@@ -232,7 +232,7 @@
         #pragma unroll_loop_start
         for (int i = 0; i < 16; i++) {
           if (pos.y >= 0.2) {
-            color = createArrow(vec2(pos.x, pos.y), width, height, aColor, color);
+            color = createArrow(pos.xy, width, height, aColor, color);
             pos -= distance;
           }
         }
