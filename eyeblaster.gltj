@@ -137,27 +137,33 @@
     }
 
     vec4 createArrow(vec2 pos, float width, float height, vec3 aColor, vec4 color) {
-        // root
-        float angle = -0.78;
-
-        vec2 dimL = vec2(width, height);
-        vec2 dimR = vec2(height, width);
-
-        vec2 pivot = (vec2(dimL.x, dimR.y) / 2.);
+        const float angle = PI * 0.25;
+        vec2 pivot = pos;
+        float fullWidth = leftWidth/iResolution.x * 0.6;
+        float width2 = fullWidth - height;
         
-        pos -= pivot;
-        pivot += pos;
+        vec4 boxBounds = vec4(pos.x - fullWidth / 2., pos.y - height / 2., pos.x + fullWidth / 2., pos.y + height / 2.);
+        vec2 bottomLeft;
+        vec2 bottomRight;
+        vec2 topLeft;
+        vec2 topRight;
 
-        vec2 bottomLeft = pos;
-        vec2 topRight = bottomLeft + dimL;
-        // derived
-        vec2 bottomRight = vec2(topRight.x, bottomLeft.y);
-        vec2 topLeft = vec2(bottomLeft.x, topRight.y);
+        // left
+
+        bottomLeft = boxBounds.xy;
+        bottomRight = boxBounds.zy;
+        topLeft = boxBounds.xw;
+        topRight = boxBounds.zw;
 
         bottomLeft = rotateCCW(bottomLeft, pivot, angle);
         topRight = rotateCCW(topRight, pivot, angle);
         bottomRight = rotateCCW(bottomRight, pivot, angle);
         topLeft = rotateCCW(topLeft, pivot, angle);
+
+        bottomLeft -= vec2(width2 / sqrt(2.) / 2., 0.);
+        topRight -= vec2(width2 / sqrt(2.) / 2., 0.);
+        bottomRight -= vec2(width2 / sqrt(2.) / 2., 0.);
+        topLeft -= vec2(width2 / sqrt(2.) / 2., 0.);
 
         if (
           isPointInTriangle(vUv, bottomLeft, bottomRight, topRight) ||
@@ -167,17 +173,22 @@
           color.a = 1.;
         }
 
-        bottomLeft = pos;
-        topRight = bottomLeft + dimR;
+        // right
 
-        // derived
-        bottomRight = vec2(topRight.x, bottomLeft.y);
-        topLeft = vec2(bottomLeft.x, topRight.y);
+        bottomLeft = boxBounds.xy;
+        bottomRight = boxBounds.zy;
+        topLeft = boxBounds.xw;
+        topRight = boxBounds.zw;
 
-        bottomLeft = rotateCCW(bottomLeft, pivot, angle);
-        topRight = rotateCCW(topRight, pivot, angle);
-        bottomRight = rotateCCW(bottomRight, pivot, angle);
-        topLeft = rotateCCW(topLeft, pivot, angle);
+        bottomLeft = rotateCCW(bottomLeft, pivot, -angle);
+        topRight = rotateCCW(topRight, pivot, -angle);
+        bottomRight = rotateCCW(bottomRight, pivot, -angle);
+        topLeft = rotateCCW(topLeft, pivot, -angle);
+
+        bottomLeft += vec2(width2 / sqrt(2.) / 2., 0.);
+        topRight += vec2(width2 / sqrt(2.) / 2., 0.);
+        bottomRight += vec2(width2 / sqrt(2.) / 2., 0.);
+        topLeft += vec2(width2 / sqrt(2.) / 2., 0.);
 
         if (
           isPointInTriangle(vUv, bottomLeft, bottomRight, topRight) ||
@@ -220,18 +231,18 @@
 
       {
         //// arrows 
-        float width = 0.012*2000./iResolution.x;
-        float height = 0.16*1400./iResolution.x;
+        float width = 0.16*1400./iResolution.x;
+        float height = 0.01*1400./iResolution.y;
         vec2 distance = vec2(0.0, 0.07*1400./iResolution.y);
         float eq = mod(iTimeS, 0.35);
         // float offset = max(-1.49, min(1.49, v));
         float offset = 0.;
-        vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. - offset - 0.2 * eq);
+        vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. - offset - 0.2*1400./iResolution.y * eq);
         vec3 aColor = arrowColor;
         
         #pragma unroll_loop_start
         for (int i = 0; i < 16; i++) {
-          if (pos.y >= 0.2) {
+          if (vUv.x >= 0.2 && vUv.x <= 0.2 + leftWidth/iResolution.x && vUv.y >= 0.2) {
             color = createArrow(pos.xy, width, height, aColor, color);
             pos -= distance;
           }
