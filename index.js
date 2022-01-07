@@ -133,6 +133,9 @@ export default e => {
         } else {
           uniforms.showBg.value = false;
         }
+        return true;
+      } else {
+        return false;
       }
     }
   }
@@ -263,9 +266,8 @@ export default e => {
   
   const _getCurrentPlayerZone = () => zones.find(z => z.boundingBox.containsPoint(localPlayer.position)) || null;
   
-  let lastZone = null;
+  let currentZone;
   _update = (timestamp, timeDiff) => {
-    let currentZone;
     if (globalZone && !isSceneLoaded()) {
       currentZone = globalZone;
     } else {
@@ -277,12 +279,24 @@ export default e => {
       currentZone.lastCurrentTimestamp = now;
     }
 
+    const _setVisible = visible => {
+      eyeblasterApp.visible = visible;
+      for (const child of textApp.children) {
+        child.visible = visible;
+      }
+    };
+    _setVisible(false);
     if (appsLoaded) {
+      let hadSomeZone = false;
       for (const zone of zones) {
-        zone.update(timestamp, timeDiff);
+        if (zone.update(timestamp, timeDiff)) {
+          hadSomeZone = true;
+        }
+      }
+      if (hadSomeZone) {
+        _setVisible(true);
       }
     }
-    lastZone = currentZone;
 
     /* if (showOnStart && !addedGlobal && appsLoaded) {
       startTime = timestamp;
