@@ -283,7 +283,7 @@
         {
           float offset = 0.;
           vec2 bottomLeft = vec2(0.55 - offset, 0.5);
-          vec2 topRight = vec2(0.55 + hBgWidth - offset, 0.55);
+          vec2 topRight = vec2(0.55 + hBgWidth*1000./iResolution.x - offset, 0.55);
           if (
             insideAABB(vUv, bottomLeft, topRight)
           ) {
@@ -298,7 +298,7 @@
         {
           float offset = 0.;
           vec2 bottomLeft = vec2(0.55 - offset, 0.4);
-          vec2 topRight = vec2(0.55 + shBgWidth - offset, 0.45);
+          vec2 topRight = vec2(0.55 + shBgWidth*1000./iResolution.x - offset, 0.45);
           if (
             insideAABB(vUv, bottomLeft, topRight)
           ) {
