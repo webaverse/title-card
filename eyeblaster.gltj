@@ -52,13 +52,9 @@
       value: false,
       needsUpdate: true,
     },
-    startValue: {
+    factor: {
       value: 0.0,
-      needsUpdate: true,
-    },
-    endValue: {
-      value: 0.0,
-      needsUpdate: true,
+      // needsUpdate: true,
     },
   },
   vertexShader: `\
@@ -90,8 +86,7 @@
     uniform vec3 arrowColor;
     uniform float hBgWidth;
     uniform float shBgWidth;
-    uniform float startValue;
-    uniform float endValue;
+    uniform float factor;
     uniform bool showBg;
 
     varying vec2 vUv;
@@ -229,22 +224,16 @@
     void main() {
       vec4 color = vec4(0.0);
       
-      float f = (iTimeS - startTime) / ((startTime + animTime/2.0) - startTime);
-      f = clamp(f, 0., 1.);
-      float v = startValue + (endValue - startValue) * f;
-      
       if (showBg) {
         color = vec4(bgColor, 1.0);
       }
 
       {
         //// color part
-        // float offset = max(-1.49, min(1.49, v));
-        // float offset = v;
-        float offset = 0.;
+        float offset = 1.-factor;
 
-        vec2 bottomLeft = vec2(0.2, 0.4 - offset);
-        vec2 topRight = vec2(0.2 + leftWidth/iResolution.x, 1. - offset);
+        vec2 bottomLeft = vec2(0.2, 0.4 + offset);
+        vec2 topRight = vec2(0.2 + leftWidth/iResolution.x, 1. + offset);
         if (
           insideAABB(vUv, bottomLeft, topRight)
         ) {
@@ -260,14 +249,13 @@
         float height = 0.01;
         vec2 distance = vec2(0.0, 0.06*1400./iResolution.y);
         float eq = mod(iTimeS, 0.35);
-        // float offset = max(-1.49, min(1.49, v));
-        float offset = 0.;
-        vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. - offset - distance.y*3. * eq);
+        float offset = 1.-factor;
+        vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. + offset - distance.y*3. * eq);
         vec3 aColor = arrowColor;
         
         #pragma unroll_loop_start
         for (int i = 0; i < 16; i++) {
-          if (vUv.x >= 0.2 && vUv.x <= 0.2 + leftWidth/iResolution.x && vUv.y >= 0.2) {
+          if (vUv.x >= 0.2 && vUv.x <= 0.2 + leftWidth/iResolution.x && vUv.y >= 0.2 + offset) {
             color = createArrow(pos.xy, width, height, aColor, color);
             pos -= distance;
           }
@@ -277,11 +265,10 @@
 
       {
         //// black part
-        // float offset = max(-1.49, min(1.49, v));
-        float offset = 0.;
+        float offset = 1.-factor;
 
-        vec2 bottomLeftb = vec2(0.2, 0.2 - offset);
-        vec2 topRightb = vec2(0.2 + leftWidth/iResolution.x, 0.4 - offset);
+        vec2 bottomLeftb = vec2(0.2, 0.2 + offset);
+        vec2 topRightb = vec2(0.2 + leftWidth/iResolution.x, 0.4 + offset);
         
         //// derived
         float width = topRightb.x - bottomLeftb.x;
@@ -299,33 +286,29 @@
         }
       }
 
+      //// heading
       {
-        //// heading
-        {
-          float offset = 0.;
-          vec2 bottomLeft = vec2(0.55 - offset, 0.5);
-          vec2 topRight = vec2(0.55 + hBgWidth*1000./iResolution.x - offset, 0.55);
-          if (
-            insideAABB(vUv, bottomLeft, topRight)
-          ) {
-            color.rgb = pColor1;
-            color.a = 1.;
-          }
+        float offset = 1.-factor;
+        vec2 bottomLeft = vec2(0.55 + offset, 0.5);
+        vec2 topRight = vec2(0.55 + hBgWidth*1000./iResolution.x + offset, 0.55);
+        if (
+          insideAABB(vUv, bottomLeft, topRight)
+        ) {
+          color.rgb = pColor1;
+          color.a = 1.;
         }
       }
 
+      //// sub-heading
       {
-        //// sub-heading
-        {
-          float offset = 0.;
-          vec2 bottomLeft = vec2(0.55 - offset, 0.4);
-          vec2 topRight = vec2(0.55 + shBgWidth*1000./iResolution.x - offset, 0.45);
-          if (
-            insideAABB(vUv, bottomLeft, topRight)
-          ) {
-            color.rgb = pColor1;
-            color.a = 1.;
-          }
+        float offset = 1.-factor;
+        vec2 bottomLeft = vec2(0.55 + offset, 0.4);
+        vec2 topRight = vec2(0.55 + shBgWidth*1000./iResolution.x + offset, 0.45);
+        if (
+          insideAABB(vUv, bottomLeft, topRight)
+        ) {
+          color.rgb = pColor1;
+          color.a = 1.;
         }
       }
 

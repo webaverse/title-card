@@ -52,8 +52,13 @@ export default e => {
       // this.subHeadingBgWidth = subHeadingBgWidth;
       this.animationTime = animationTime;
       this.showBg = showBg;
+
+      this.factor = 0;
+      this.lastCurrentTimestamp = -Infinity;
     }
-    update() {
+    static holdTime = 2 * 1000;
+    static factorSpeed = 0.3;
+    update(timestamp, timeDiff) {
       const {
         heading = 'HEADING',
         subHeading = 'SUBHEADING',
@@ -80,47 +85,54 @@ export default e => {
       const shBlockBounds = textApp.children[2].textRenderInfo.blockBounds;
       const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
 
-      for (const child of textApp.children) {
-        let uniforms = child.material.uniforms;
-        
-        uniforms.color.value.setHex(_parseColor(textColor));
-        uniforms.animTime.value = animationTime;
-        uniforms.startValue.value = 0.0;
-        uniforms.endValue.value = 6.0;
-      }
-
-      let uniforms = eyeblasterApp.children[0].material.uniforms;
-
-      if (Array.isArray(uniforms.pColor1.value)) {
-        uniforms.pColor1.value = new THREE.Color().fromArray(uniforms.pColor1.value);
-      }
-      if (Array.isArray(uniforms.pColor2.value)) {
-        uniforms.pColor2.value = new THREE.Color().fromArray(uniforms.pColor2.value);
-      }
-      if (Array.isArray(uniforms.pColor3.value)) {
-        uniforms.pColor3.value = new THREE.Color().fromArray(uniforms.pColor3.value);
-      }
-      if (Array.isArray(uniforms.arrowColor.value)) {
-        uniforms.arrowColor.value = new THREE.Color().fromArray(uniforms.arrowColor.value);
-      }
-      uniforms.pColor1.value.setHex(_parseColor(primaryColor1));
-      uniforms.pColor2.value.setHex(_parseColor(primaryColor2));
-      uniforms.pColor3.value.setHex(_parseColor(primaryColor3));
-      uniforms.arrowColor.value.setHex(_parseColor(arrowColor));
-      uniforms.hBgWidth.value = hBgWidth;
-      uniforms.shBgWidth.value = shBgWidth;
-      uniforms.animTime.value = animationTime;
-      uniforms.startValue.value = 0.0;
-      uniforms.endValue.value = 6.0;
-
-      if (showBg) {
-        if (Array.isArray(uniforms.bgColor.value)) {
-          uniforms.bgColor.value = new THREE.Color().fromArray(uniforms.bgColor.value);
-        }
-        uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
-        uniforms.showBg.value = true;
+      const timeSinceCurrent = timestamp - this.lastCurrentTimestamp;
+      if (timeSinceCurrent < 2000) {
+        this.factor += Zone.factorSpeed;
       } else {
-        uniforms.showBg.value = false;
+        this.factor -= Zone.factorSpeed;
+      }
+      this.factor = Math.min(Math.max(this.factor, 0), 1);
+      if (this.factor > 0) {
+        for (const child of textApp.children) {
+          let uniforms = child.material.uniforms;
+          
+          uniforms.color.value.setHex(_parseColor(textColor));
+          uniforms.animTime.value = animationTime;
+          uniforms.factor.value = this.factor;
+        }
+
+        let uniforms = eyeblasterApp.children[0].material.uniforms;
+
+        if (Array.isArray(uniforms.pColor1.value)) {
+          uniforms.pColor1.value = new THREE.Color().fromArray(uniforms.pColor1.value);
+        }
+        if (Array.isArray(uniforms.pColor2.value)) {
+          uniforms.pColor2.value = new THREE.Color().fromArray(uniforms.pColor2.value);
+        }
+        if (Array.isArray(uniforms.pColor3.value)) {
+          uniforms.pColor3.value = new THREE.Color().fromArray(uniforms.pColor3.value);
+        }
+        if (Array.isArray(uniforms.arrowColor.value)) {
+          uniforms.arrowColor.value = new THREE.Color().fromArray(uniforms.arrowColor.value);
+        }
+        uniforms.pColor1.value.setHex(_parseColor(primaryColor1));
+        uniforms.pColor2.value.setHex(_parseColor(primaryColor2));
+        uniforms.pColor3.value.setHex(_parseColor(primaryColor3));
+        uniforms.arrowColor.value.setHex(_parseColor(arrowColor));
+        uniforms.hBgWidth.value = hBgWidth;
+        uniforms.shBgWidth.value = shBgWidth;
+        uniforms.animTime.value = animationTime;
+        uniforms.factor.value = this.factor;
+
+        if (showBg) {
+          if (Array.isArray(uniforms.bgColor.value)) {
+            uniforms.bgColor.value = new THREE.Color().fromArray(uniforms.bgColor.value);
+          }
+          uniforms.bgColor.value = new THREE.Color().setHex(backgroundColor);
+          uniforms.showBg.value = true;
+        } else {
+          uniforms.showBg.value = false;
+        }
       }
     }
   }
@@ -261,7 +273,14 @@ export default e => {
     }
 
     if (currentZone) {
-      appsLoaded && currentZone.update();
+      const now = performance.now();
+      currentZone.lastCurrentTimestamp = now;
+    }
+
+    if (appsLoaded) {
+      for (const zone of zones) {
+        zone.update(timestamp, timeDiff);
+      }
     }
     lastZone = currentZone;
 
