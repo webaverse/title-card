@@ -137,20 +137,21 @@
     }
 
     vec4 createArrow(vec2 pos, float width, float height, vec3 aColor, vec4 color) {
-        const float angle = PI * 0.25;
-        vec2 pivot = pos;
-        float width2 = width * 1400./iResolution.x - height * 1400./iResolution.y;
+        const float angle = PI * 0.22;
+        vec2 pivot = vec2(0.);
+        float width2 = width - height/sqrt(2.);
         
         vec4 boxBounds = vec4(
-          pos.x - (width / 2.) * 1400./iResolution.x,
-          pos.y - (height / 2.) * 1400./iResolution.y,
-          pos.x + (width / 2.) * 1400./iResolution.x,
-          pos.y + (height / 2.) * 1400./iResolution.y
+          -(width / 2.),
+          -(height / 2.),
+          +(width / 2.),
+          +(height / 2.)
         );
         vec2 bottomLeft;
         vec2 bottomRight;
         vec2 topLeft;
         vec2 topRight;
+        vec2 oset;
 
         // left
 
@@ -164,10 +165,20 @@
         bottomRight = rotateCCW(bottomRight, pivot, angle);
         topLeft = rotateCCW(topLeft, pivot, angle);
 
-        bottomLeft -= vec2(width2 / sqrt(2.) / 2., 0.);
-        topRight -= vec2(width2 / sqrt(2.) / 2., 0.);
-        bottomRight -= vec2(width2 / sqrt(2.) / 2., 0.);
-        topLeft -= vec2(width2 / sqrt(2.) / 2., 0.);
+        oset = rotateCCW(vec2(-width2 / 2., 0.), vec2(0.), angle);
+        bottomLeft += oset;
+        topRight += oset;
+        bottomRight += oset;
+        topLeft += oset;
+
+        bottomLeft *= 1400./iResolution.xy;
+        bottomLeft += pos;
+        topRight *= 1400./iResolution.xy;
+        topRight += pos;
+        bottomRight *= 1400./iResolution.xy;
+        bottomRight += pos;
+        topLeft *= 1400./iResolution.xy;
+        topLeft += pos;
 
         if (
           isPointInTriangle(vUv, bottomLeft, bottomRight, topRight) ||
@@ -189,10 +200,20 @@
         bottomRight = rotateCCW(bottomRight, pivot, -angle);
         topLeft = rotateCCW(topLeft, pivot, -angle);
 
-        bottomLeft += vec2(width2 / sqrt(2.) / 2., 0.);
-        topRight += vec2(width2 / sqrt(2.) / 2., 0.);
-        bottomRight += vec2(width2 / sqrt(2.) / 2., 0.);
-        topLeft += vec2(width2 / sqrt(2.) / 2., 0.);
+        oset = rotateCCW(vec2(width2 / 2., 0.), vec2(0.), -angle);
+        bottomLeft += oset;
+        topRight += oset;
+        bottomRight += oset;
+        topLeft += oset;
+
+        bottomLeft *= 1400./iResolution.xy;
+        bottomLeft += pos;
+        topRight *= 1400./iResolution.xy;
+        topRight += pos;
+        bottomRight *= 1400./iResolution.xy;
+        bottomRight += pos;
+        topLeft *= 1400./iResolution.xy;
+        topLeft += pos;
 
         if (
           isPointInTriangle(vUv, bottomLeft, bottomRight, topRight) ||
@@ -235,7 +256,7 @@
 
       {
         //// arrows 
-        float width = 0.16;
+        float width = 0.14;
         float height = 0.01;
         vec2 distance = vec2(0.0, 0.06*1400./iResolution.y);
         float eq = mod(iTimeS, 0.35);
