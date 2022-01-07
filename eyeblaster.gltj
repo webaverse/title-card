@@ -241,7 +241,7 @@
         float eq = mod(iTimeS, 0.35);
         // float offset = max(-1.49, min(1.49, v));
         float offset = 0.;
-        vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. - offset - distance.y*3.*1400./iResolution.y * eq);
+        vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. - offset - distance.y*3. * eq);
         vec3 aColor = arrowColor;
         
         #pragma unroll_loop_start
