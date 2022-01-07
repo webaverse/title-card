@@ -34,8 +34,8 @@ export default e => {
       primaryColor2,
       primaryColor3,
       arrowColor,
-      headingBgWidth,
-      subHeadingBgWidth,
+      // headingBgWidth,
+      // subHeadingBgWidth,
       animationTime,
       showBg,
     }) {
@@ -48,12 +48,10 @@ export default e => {
       this.primaryColor2 = primaryColor2;
       this.primaryColor3 = primaryColor3;
       this.arrowColor = arrowColor;
-      this.headingBgWidth = headingBgWidth;
-      this.subHeadingBgWidth = subHeadingBgWidth;
+      // this.headingBgWidth = headingBgWidth;
+      // this.subHeadingBgWidth = subHeadingBgWidth;
       this.animationTime = animationTime;
       this.showBg = showBg;
-
-      console.log(this);
     }
     update() {
       const {
@@ -66,8 +64,8 @@ export default e => {
         primaryColor3 = '0xffffff',
         backgroundColor = '0x202020',
         arrowColor = '0xffffff',
-        headingBgWidth = 0.35,
-        subHeadingBgWidth = 0.28,
+        // headingBgWidth = 0.35,
+        // subHeadingBgWidth = 0.28,
         animationTime = 6.0,
         showBg = false,
       } = this;
@@ -210,8 +208,8 @@ export default e => {
       primaryColor2,
       primaryColor3,
       arrowColor,
-      headingBgWidth,
-      subHeadingBgWidth,
+      // headingBgWidth,
+      // subHeadingBgWidth,
       animationTime,
       dimensions,
       showBg,
@@ -236,8 +234,8 @@ export default e => {
       primaryColor2,
       primaryColor3,
       arrowColor,
-      headingBgWidth,
-      subHeadingBgWidth,
+      // headingBgWidth,
+      // subHeadingBgWidth,
       animationTime,
       showBg,
     });
