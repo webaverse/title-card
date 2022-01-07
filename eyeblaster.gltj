@@ -230,7 +230,7 @@
 
       {
         //// color part
-        float offset = 1.-factor;
+        float offset = (1.-factor)*0.9;
 
         vec2 bottomLeft = vec2(0.2, 0.4 + offset);
         vec2 topRight = vec2(0.2 + leftWidth/iResolution.x, 1. + offset);
@@ -249,7 +249,7 @@
         float height = 0.01;
         vec2 distance = vec2(0.0, 0.06*1400./iResolution.y);
         float eq = mod(iTimeS, 0.35);
-        float offset = 1.-factor;
+        float offset = (1.-factor)*0.9;
         vec2 pos = vec2(0.2 + leftWidth/iResolution.x/2., 1. + offset - distance.y*3. * eq);
         vec3 aColor = arrowColor;
         
@@ -265,7 +265,7 @@
 
       {
         //// black part
-        float offset = 1.-factor;
+        float offset = (1.-factor)*0.9;
 
         vec2 bottomLeftb = vec2(0.2, 0.2 + offset);
         vec2 topRightb = vec2(0.2 + leftWidth/iResolution.x, 0.4 + offset);
@@ -288,7 +288,7 @@
 
       //// heading
       {
-        float offset = 1.-factor;
+        float offset = (1.-factor)*0.6;
         vec2 bottomLeft = vec2(0.55 + offset, 0.5);
         vec2 topRight = vec2(0.55 + hBgWidth*1000./iResolution.x + offset, 0.55);
         if (
@@ -301,7 +301,7 @@
 
       //// sub-heading
       {
-        float offset = 1.-factor;
+        float offset = (1.-factor)*0.6;
         vec2 bottomLeft = vec2(0.55 + offset, 0.4);
         vec2 topRight = vec2(0.55 + shBgWidth*1000./iResolution.x + offset, 0.45);
         if (
