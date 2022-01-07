@@ -279,14 +279,15 @@ export default e => {
       currentZone.lastCurrentTimestamp = now;
     }
 
-    const _setVisible = visible => {
-      eyeblasterApp.visible = visible;
-      for (const child of textApp.children) {
-        child.visible = visible;
-      }
-    };
-    _setVisible(false);
     if (appsLoaded) {
+      const _setVisible = visible => {
+        eyeblasterApp.visible = visible;
+        for (const child of textApp.children) {
+          child.visible = visible;
+        }
+      };
+      _setVisible(false);
+
       let hadSomeZone = false;
       for (const zone of zones) {
         if (zone.update(timestamp, timeDiff)) {
