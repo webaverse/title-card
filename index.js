@@ -57,7 +57,7 @@ export default e => {
       this.lastCurrentTimestamp = -Infinity;
     }
     static holdTime = 2 * 1000;
-    static factorSpeed = 0.3;
+    static factorSpeed = 0.1;
     update(timestamp, timeDiff) {
       const {
         heading = 'HEADING',
