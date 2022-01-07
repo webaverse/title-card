@@ -139,10 +139,14 @@
     vec4 createArrow(vec2 pos, float width, float height, vec3 aColor, vec4 color) {
         const float angle = PI * 0.25;
         vec2 pivot = pos;
-        float fullWidth = leftWidth/iResolution.x * 0.6;
-        float width2 = fullWidth - height;
+        float width2 = width * 1400./iResolution.x - height * 1400./iResolution.y;
         
-        vec4 boxBounds = vec4(pos.x - fullWidth / 2., pos.y - height / 2., pos.x + fullWidth / 2., pos.y + height / 2.);
+        vec4 boxBounds = vec4(
+          pos.x - (width / 2.) * 1400./iResolution.x,
+          pos.y - (height / 2.) * 1400./iResolution.y,
+          pos.x + (width / 2.) * 1400./iResolution.x,
+          pos.y + (height / 2.) * 1400./iResolution.y
+        );
         vec2 bottomLeft;
         vec2 bottomRight;
         vec2 topLeft;
@@ -231,9 +235,9 @@
 
       {
         //// arrows 
-        float width = 0.16*1400./iResolution.x;
-        float height = 0.01*1400./iResolution.y;
-        vec2 distance = vec2(0.0, 0.07*1400./iResolution.y);
+        float width = 0.16;
+        float height = 0.01;
+        vec2 distance = vec2(0.0, 0.06*1400./iResolution.y);
         float eq = mod(iTimeS, 0.35);
         // float offset = max(-1.49, min(1.49, v));
         float offset = 0.;
