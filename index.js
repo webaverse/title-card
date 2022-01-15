@@ -57,7 +57,7 @@ export default e => {
       this.lastCurrentTimestamp = -Infinity;
     }
     static holdTime = 2 * 1000;
-    static factorSpeed = 0.1;
+    static factorSpeed = 0.01;
     update(timestamp, timeDiff) {
       const {
         heading = 'HEADING',
@@ -86,7 +86,7 @@ export default e => {
       const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
 
       const timeSinceCurrent = timestamp - this.lastCurrentTimestamp;
-      if (timeSinceCurrent < 2000) {
+      if (timeSinceCurrent < 2500) {
         this.factor += Zone.factorSpeed;
       } else {
         this.factor -= Zone.factorSpeed;
@@ -264,7 +264,7 @@ export default e => {
   });
   const globalZone = zones.find(zone => !isFinite(zone.boundingBox.min.x)) || null;
   
-  const _getCurrentPlayerZone = () => zones.find(z => z.boundingBox.containsPoint(localPlayer.position)) || null;
+  const _getCurrentPlayerZone = () => zones.find(z => isFinite(z.boundingBox.min.x) && z.boundingBox.containsPoint(localPlayer.position)) || null;
   
   let currentZone;
   _update = (timestamp, timeDiff) => {
