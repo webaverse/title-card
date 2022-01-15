@@ -93,7 +93,7 @@
 
     #define PI 3.1415926535897932384626433832795
 
-    const float leftWidth = 400.;
+    const float leftWidth = 255.;
     
     vec2 rotateCCW(vec2 pos, float angle) { 
       float ca = cos(angle),  sa = sin(angle);
@@ -223,7 +223,7 @@
 
     void main() {
       vec4 color = vec4(0.0);
-      
+
       if (showBg) {
         color = vec4(bgColor, 1.0);
       }
@@ -239,7 +239,7 @@
         if (
           insideAABB(vUv, bottomLeft, topRight)
         ) {
-          vec3 equation = vec3(0.5 * cos(12.5664 * vUv.y) + 0.5);
+          vec3 equation = vec3(0.5 * cos(3.3333 * PI * (vUv.y - 0.4 - offset)) + 0.5);
           color.rgb = mix(pColor1, pColor2, equation);
           color.a = 1.;
         } 
@@ -247,7 +247,7 @@
 
       {
         //// arrows 
-        float width = 0.14;
+        float width = 0.1;
         float height = 0.01;
         vec2 distance = vec2(0.0, 0.06*1400./iResolution.y);
         float eq = mod(iTimeS, 0.35);
