@@ -54,6 +54,7 @@ export default e => {
       this.showBg = showBg;
 
       this.factor = 0;
+      this.shownOnce = false;
       this.lastCurrentTimestamp = -Infinity;
     }
     static holdTime = 2 * 1000;
@@ -264,7 +265,13 @@ export default e => {
   });
   const globalZone = zones.find(zone => !isFinite(zone.boundingBox.min.x)) || null;
   
-  const _getCurrentPlayerZone = () => zones.find(z => isFinite(z.boundingBox.min.x) && z.boundingBox.containsPoint(localPlayer.position)) || null;
+  const _getCurrentPlayerZone = () => zones.find(z => {
+    if(isFinite(z.boundingBox.min.x) && z.boundingBox.containsPoint(localPlayer.position)) { 
+      if(z.shownOnce) return false;
+      z.shownOnce = true;
+    } else z.shownOnce = false;
+    return z.shownOnce;
+  }) || null;
   
   let currentZone;
   _update = (timestamp, timeDiff) => {
