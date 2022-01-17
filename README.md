@@ -51,7 +51,7 @@ Then title card information should be added to `.scn` file in the following mann
 }
 ```
 
-## laodPriority
+## loadPriority
 The loadPrioirty should be set to the lowest value so it gets loaded before all other apps in the case of a global title card on scene loading.
 
 ## boxHelper
