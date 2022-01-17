@@ -33,6 +33,7 @@ export default e => {
       primaryColor1,
       primaryColor2,
       primaryColor3,
+      backgroundColor,
       arrowColor,
       // headingBgWidth,
       // subHeadingBgWidth,
@@ -47,6 +48,7 @@ export default e => {
       this.primaryColor1 = primaryColor1;
       this.primaryColor2 = primaryColor2;
       this.primaryColor3 = primaryColor3;
+      this.backgroundColor = backgroundColor;
       this.arrowColor = arrowColor;
       // this.headingBgWidth = headingBgWidth;
       // this.subHeadingBgWidth = subHeadingBgWidth;
@@ -223,6 +225,7 @@ export default e => {
       primaryColor1,
       primaryColor2,
       primaryColor3,
+      backgroundColor,
       arrowColor,
       // headingBgWidth,
       // subHeadingBgWidth,
@@ -249,6 +252,7 @@ export default e => {
       primaryColor1,
       primaryColor2,
       primaryColor3,
+      backgroundColor,
       arrowColor,
       // headingBgWidth,
       // subHeadingBgWidth,
