@@ -63,9 +63,9 @@ export default e => {
     static factorSpeed = 0.01;
     update(timestamp, timeDiff) {
       const {
-        heading = 'HEADING',
-        subHeading = 'SUBHEADING',
-        text = 'TEXT',
+        heading = '',
+        subHeading = '',
+        text = '',
         textColor = '0xffffff',
         primaryColor1 = '0x000000',
         primaryColor2 = '0xffffff',
