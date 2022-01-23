@@ -78,16 +78,6 @@ export default e => {
         showBg = false,
       } = this;
       
-      textApp.children[1].text = heading;
-      textApp.children[2].text = subHeading;
-      textApp.children[3].text = text;
-
-      const hBlockBounds = textApp.children[1].textRenderInfo.blockBounds;
-      const hBgWidth = hBlockBounds[2] - hBlockBounds[0];
-
-      const shBlockBounds = textApp.children[2].textRenderInfo.blockBounds;
-      const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
-
       const timeSinceCurrent = timestamp - this.lastCurrentTimestamp;
       if (timeSinceCurrent < 2500) {
         this.factor += Zone.factorSpeed;
@@ -96,6 +86,16 @@ export default e => {
       }
       this.factor = Math.min(Math.max(this.factor, 0), 1);
       if (this.factor > 0) {
+        textApp.children[1].text = heading;
+        textApp.children[2].text = subHeading;
+        textApp.children[3].text = text;
+  
+        const hBlockBounds = textApp.children[1].textRenderInfo.blockBounds;
+        const hBgWidth = hBlockBounds[2] - hBlockBounds[0];
+  
+        const shBlockBounds = textApp.children[2].textRenderInfo.blockBounds;
+        const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
+        
         for (const child of textApp.children) {
           let uniforms = child.material.uniforms;
           
