@@ -33,6 +33,7 @@ export default e => {
       primaryColor1,
       primaryColor2,
       primaryColor3,
+      backgroundColor,
       arrowColor,
       // headingBgWidth,
       // subHeadingBgWidth,
@@ -47,6 +48,7 @@ export default e => {
       this.primaryColor1 = primaryColor1;
       this.primaryColor2 = primaryColor2;
       this.primaryColor3 = primaryColor3;
+      this.backgroundColor = backgroundColor;
       this.arrowColor = arrowColor;
       // this.headingBgWidth = headingBgWidth;
       // this.subHeadingBgWidth = subHeadingBgWidth;
@@ -54,15 +56,16 @@ export default e => {
       this.showBg = showBg;
 
       this.factor = 0;
+      this.shownOnce = false;
       this.lastCurrentTimestamp = -Infinity;
     }
     static holdTime = 2 * 1000;
     static factorSpeed = 0.01;
     update(timestamp, timeDiff) {
       const {
-        heading = 'HEADING',
-        subHeading = 'SUBHEADING',
-        text = 'TEXT',
+        heading = '',
+        subHeading = '',
+        text = '',
         textColor = '0xffffff',
         primaryColor1 = '0x000000',
         primaryColor2 = '0xffffff',
@@ -75,16 +78,6 @@ export default e => {
         showBg = false,
       } = this;
       
-      textApp.children[1].text = heading;
-      textApp.children[2].text = subHeading;
-      textApp.children[3].text = text;
-
-      const hBlockBounds = textApp.children[1].textRenderInfo.blockBounds;
-      const hBgWidth = hBlockBounds[2] - hBlockBounds[0];
-
-      const shBlockBounds = textApp.children[2].textRenderInfo.blockBounds;
-      const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
-
       const timeSinceCurrent = timestamp - this.lastCurrentTimestamp;
       if (timeSinceCurrent < 2500) {
         this.factor += Zone.factorSpeed;
@@ -93,6 +86,16 @@ export default e => {
       }
       this.factor = Math.min(Math.max(this.factor, 0), 1);
       if (this.factor > 0) {
+        textApp.children[1].text = heading;
+        textApp.children[2].text = subHeading;
+        textApp.children[3].text = text;
+  
+        const hBlockBounds = textApp.children[1].textRenderInfo.blockBounds;
+        const hBgWidth = hBlockBounds[2] - hBlockBounds[0];
+  
+        const shBlockBounds = textApp.children[2].textRenderInfo.blockBounds;
+        const shBgWidth = shBlockBounds[2] - shBlockBounds[0];
+        
         for (const child of textApp.children) {
           let uniforms = child.material.uniforms;
           
@@ -222,6 +225,7 @@ export default e => {
       primaryColor1,
       primaryColor2,
       primaryColor3,
+      backgroundColor,
       arrowColor,
       // headingBgWidth,
       // subHeadingBgWidth,
@@ -248,6 +252,7 @@ export default e => {
       primaryColor1,
       primaryColor2,
       primaryColor3,
+      backgroundColor,
       arrowColor,
       // headingBgWidth,
       // subHeadingBgWidth,
@@ -264,7 +269,13 @@ export default e => {
   });
   const globalZone = zones.find(zone => !isFinite(zone.boundingBox.min.x)) || null;
   
-  const _getCurrentPlayerZone = () => zones.find(z => isFinite(z.boundingBox.min.x) && z.boundingBox.containsPoint(localPlayer.position)) || null;
+  const _getCurrentPlayerZone = () => zones.find(z => {
+    if(isFinite(z.boundingBox.min.x) && z.boundingBox.containsPoint(localPlayer.position)) { 
+      if(z.shownOnce) return false;
+      z.shownOnce = true;
+    } else z.shownOnce = false;
+    return z.shownOnce;
+  }) || null;
   
   let currentZone;
   _update = (timestamp, timeDiff) => {
